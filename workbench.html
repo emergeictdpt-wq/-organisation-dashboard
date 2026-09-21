@@ -33,7 +33,7 @@
     margin:0; padding:0;
     background: var(--paper);
     color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family:Verdana, Geneva, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -56,7 +56,7 @@
   }
   .topbar-brand{ display:flex; align-items:center; gap:10px; grid-column: 2; justify-content:center; text-align:center; }
   .topbar-brand span{
-    font-family: Georgia, serif; font-size: 16px; color: var(--brand-darker); font-weight:600;
+    font-family:Verdana, Geneva, sans-serif; font-size: 16px; color: var(--brand-darker); font-weight:600;
   }
   .topbar-right{ display:flex; align-items:center; gap:14px; grid-column: 3; justify-content:flex-end; flex-wrap:wrap; }
   .topbar-user{
@@ -78,7 +78,7 @@
     transition: border-color 0.15s ease, background 0.15s ease;
   }
   #dropzone.drag{ border-color: var(--brand); background: var(--brand-soft); }
-  #dropzone h2{ font-family: Georgia, serif; font-size: 20px; margin: 0 0 6px; color: var(--brand-darker); }
+  #dropzone h2{ font-family:Verdana, Geneva, sans-serif; font-size: 20px; margin: 0 0 6px; color: var(--brand-darker); }
   #dropzone p{ color: var(--ink-soft); margin: 0 0 18px; font-size: 14px; }
   #dropzone input[type="file"]{ display:none; }
 
@@ -212,7 +212,7 @@
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
   .resume-item-preview{
-    font-family: monospace; font-size:11px; color: var(--brand-dark);
+    font-family:Verdana, Geneva, sans-serif; font-size:11px; color: var(--brand-dark);
     background: var(--brand-soft); border-radius:4px; padding:3px 7px;
     margin-top:6px; display:inline-block; max-width:100%;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
@@ -317,11 +317,11 @@
   .grid-wrap{ overflow: auto; height: 56vh; }
   table{
     border-collapse: collapse; width: 100%; table-layout: fixed;
-    font-family: "SFMono-Regular", "IBM Plex Mono", Consolas, Menlo, monospace; font-size: 13px;
+    font-family:Verdana, Geneva, sans-serif; font-size: 13px;
   }
   thead th{
     position: sticky; top: 0; background: var(--brand); color: var(--white);
-    font-family: -apple-system, sans-serif; font-weight: 600; font-size: 12px;
+    font-family:Verdana, Geneva, sans-serif; font-weight: 600; font-size: 12px;
     text-align: left; padding: 9px 16px 9px 10px; white-space: nowrap;
     /* NOTE: no overflow:hidden here — the sort/filter and case-conversion dropdown
        menus are positioned children of this cell and must be allowed to escape its
@@ -364,7 +364,7 @@
   .dropdown-menu.open{ display:block; }
   .dropdown-menu button.item{
     display:block; width:100%; text-align:left; background:none; border:none;
-    padding: 8px 12px; font-size: 12px; font-family: -apple-system, sans-serif;
+    padding: 8px 12px; font-size: 12px; font-family:Verdana, Geneva, sans-serif;
     color: var(--ink); cursor:pointer;
   }
   .dropdown-menu button.item:hover{ background: var(--paper-alt); }
@@ -381,12 +381,12 @@
   }
   .filter-list label{
     display:flex; align-items:center; gap: 6px; font-size: 12px; padding: 3px 0;
-    font-family: -apple-system, sans-serif; color: var(--ink); cursor:pointer;
+    font-family:Verdana, Geneva, sans-serif; color: var(--ink); cursor:pointer;
   }
   .filter-actions{ display:flex; justify-content: space-between; margin-top: 8px; gap: 6px; }
   .filter-actions button{
     font-size: 11.5px; padding: 6px 10px; border-radius: 3px; cursor:pointer;
-    font-family: -apple-system, sans-serif; font-weight: 600;
+    font-family:Verdana, Geneva, sans-serif; font-weight: 600;
   }
   .filter-actions .apply-btn{ background: var(--brand); border: 1px solid var(--brand-dark); color: var(--white); }
   .filter-actions .clear-btn{ background: transparent; border: 1px solid var(--rule); color: var(--ink-soft); }
@@ -444,6 +444,7 @@
     border-radius: 4px; margin-bottom: 14px; box-sizing: border-box; font: inherit;
   }
   .modal-actions{ display:flex; justify-content:flex-end; gap: 8px; }
+  button, input, select, textarea{ font-family:inherit; }
 </style>
 </head>
 <body>
@@ -504,7 +505,7 @@
             </table>
           </div>
           <div class="foot">
-            <span><b id="rowCount">0</b> rows &nbsp;·&nbsp; <b id="colCount">0</b> columns &nbsp;·&nbsp; sheet <b id="sheetLabel">—</b></span>
+            <span><b id="rowCount">0</b> rows &nbsp;&nbsp; <b id="colCount">0</b> columns &nbsp;&nbsp; sheet <b id="sheetLabel">—</b></span>
             <span class="save-status" id="saveStatus"></span>
           </div>
         </div>
@@ -920,7 +921,7 @@
       row.querySelector('.resume-item-name').textContent = wb.label;
       row.querySelector('.resume-item-file').textContent = wb.file_name;
       row.querySelector('.resume-item-meta').textContent =
-        sheetCount + (sheetCount === 1 ? ' sheet' : ' sheets') + (savedLabel ? ' · saved ' + savedLabel : '');
+        sheetCount + (sheetCount === 1 ? ' sheet' : ' sheets') + (savedLabel ? ', saved ' + savedLabel : '');
 
       row.addEventListener('click', () => openStoredWorkbook(wb.id));
       row.querySelector('.resume-item-open').addEventListener('click', (e) => {
@@ -1519,7 +1520,7 @@
 
     th.appendChild(controls);
 
-    labelSpan.title = wb.headerRow ? 'Click to sort · double-click to rename' : 'Click to sort';
+    labelSpan.title = wb.headerRow ? 'Click to sort, double-click to rename' : 'Click to sort';
     labelSpan.addEventListener('click', (e) => {
       e.stopPropagation();
       if (labelSpan.isContentEditable) return;
@@ -1567,7 +1568,7 @@
     // Drag handle to resize this column; double-click to auto-fit to content.
     const resizeHandle = document.createElement('span');
     resizeHandle.className = 'col-resize-handle';
-    resizeHandle.title = 'Drag to resize column · double-click to auto-fit';
+    resizeHandle.title = 'Drag to resize column, double-click to auto-fit';
     th.appendChild(resizeHandle);
     attachColResize(resizeHandle, wb, c, rows, headers);
 

@@ -1210,15 +1210,25 @@ function renderRadar(svg, axes, values){
 function renderCombo(svg, categories, barValues, lineValues, barColors, lineColor){
   const barColorAt = i => Array.isArray(barColors) ? barColors[i % barColors.length] : barColors;
   svg.innerHTML = '';
-  const x0=44, x1=604, y0=18, y1=178, h=y1-y0;
-  const barMax = Math.max(...barValues)*1.15 || 1;
+  const x0=78, x1=604, y0=18, y1=178, h=y1-y0;
+  // round the bar scale up to a tidy number so the y-axis ticks read cleanly
+  const niceCeil = v => { const pw = Math.pow(10, Math.floor(Math.log10(v))); const m = v/pw;
+    return pw * ([1,1.2,1.5,2,2.5,3,4,5,6,8,10].find(k=>k>=m) || 10); };
+  const barMax = niceCeil((Math.max(...barValues) || 1)*1.05);
   const lineMax = Math.max(...lineValues)*1.2 || 1;
   const colW = (x1-x0)/categories.length;
 
   [0,0.5,1].forEach(f=>{
     const y = y1 - h*f;
     svg.appendChild(svgEl('line', { x1:x0,y1:y,x2:x1,y2:y, stroke:'rgba(34,50,44,0.12)', 'stroke-width':'1' }));
+    const yt = svgEl('text', { x:x0-8, y:y+3, 'text-anchor':'end', class:'axis-label', style:'font-size:9px' });
+    yt.textContent = fmt(Math.round(barMax*f));
+    svg.appendChild(yt);
   });
+  // y-axis unit
+  const unit = svgEl('text', { x:12, y:(y0+y1)/2, 'text-anchor':'middle', class:'axis-label', style:'font-size:11px', transform:`rotate(-90 12 ${(y0+y1)/2})` });
+  unit.textContent = 'MWK';
+  svg.appendChild(unit);
 
   const barW = Math.min(42, colW*0.62);
   categories.forEach((cat,i)=>{
@@ -1227,8 +1237,10 @@ function renderCombo(svg, categories, barValues, lineValues, barColors, lineColo
     svg.appendChild(svgEl('rect', {
       x:cx0-barW/2, y:y1-bh, width:barW, height:bh, rx:4, fill:barColorAt(i)
     }));
-    const bt = svgEl('text', { x:cx0, y:y1-bh-6, 'text-anchor':'middle', class:'value-label', style:'font-size:9px' });
-    bt.textContent = fmtCurrency(barValues[i]);
+    // lift the value label clear of both the bar top and the line's dot so the line never crosses it
+    const dotY = y1 - (lineValues[i]/lineMax)*h;
+    const bt = svgEl('text', { x:cx0, y:Math.max(Math.min(y1-bh, dotY) - 15, 12), 'text-anchor':'middle', class:'value-label', style:'font-size:9px' });
+    bt.textContent = fmt(barValues[i]);
     svg.appendChild(bt);
     const t = svgEl('text', { x:cx0, y:y1+16, 'text-anchor':'middle', class:'axis-label' });
     t.textContent = cat;

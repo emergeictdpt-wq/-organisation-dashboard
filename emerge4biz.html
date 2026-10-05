@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Ledger — NGO Impact Dashboard</title>
+<style>
+  :root{
+    --bg: #F6F1E4;
+    --bg-2: #EDE6D2;
+    --surface: #FFFFFF;
+    --surface-2: #F1EAD8;
+    --hairline: rgba(34,50,44,0.12);
+    --ink: #22322C;
+    --ink-dim: #57685F;
+    --ink-faint: #6C7A70;
+
+    --gold: #D9A441;
+    --gold-soft: rgba(217,164,65,0.16);
+    --plum: #B06C9A;
+    --plum-soft: rgba(176,108,154,0.16);
+    --teal: #55A0A8;
+    --teal-soft: rgba(85,160,168,0.16);
+    --clay: #B48254;
+    --clay-soft: rgba(180,130,84,0.16);
+    --sage: #8FAE7E;
+    --sage-soft: rgba(143,174,126,0.16);
+
+    --bronze: #B4823A;
+    --bronze-soft: rgba(180,130,58,0.18);
+    --parchment: #EAE2C8;
+    --parchment-2: #E1D7B6;
+    --parchment-ink: #2B2318;
+    --parchment-dim: #6E6350;
+
+    --brand-teal: #4C808B;
+    --brand-teal-deep: #3A6871;
+    --brand-navy: #3C4268;
+    --brand-mist: #EEF3F3;
+
+    --card-border: #4C808A;
+    --card-value: #4C808A;
+    --card-label: #3B4167;
+
+    --radius: 3px;
+    --serif: Verdana, Geneva, sans-serif;
+    --sans: Verdana, Geneva, sans-serif;
+    --mono: Verdana, Geneva, sans-serif;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0;
+    background: radial-gradient(120% 140% at 10% -10%, #FFFFFF 0%, var(--bg) 45%, var(--bg-2) 100%);
+    color:var(--ink);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--gold); color:#14231F; }
+
+  a, button, select{ font-family:inherit; }
+
+  .wrap{ max-width:1440px; margin:0 auto; padding:0 24px 80px; }
+
+  /* ---------- Sticky header wrapper ---------- */
+  .sticky-header{
+    position:sticky; top:0; z-index:100;
+    margin:0 -24px; padding:0;
+    box-shadow:0 18px 24px -18px rgba(34,50,44,0.22);
+    overflow:hidden;
+  }
+
+  /* Top brand band: logo + title */
+  .hero-topband{
+    position:relative; display:flex; align-items:center; justify-content:center;
+    padding:18px 24px; min-height:110px;
+    background: linear-gradient(120deg, var(--brand-teal) 0%, var(--brand-teal-deep) 100%);
+  }
+  .hero-logo-box{
+    position:absolute; left:24px; top:50%; transform:translateY(-50%);
+    flex-shrink:0; background:#fff; border-radius:3px;
+    width:40mm; height:22mm; padding:0.8mm;
+    box-sizing:border-box; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.18);
+  }
+  .hero-logo-inner{
+    width:100%; height:100%; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .hero-logo-box img{
+    max-width:100%; max-height:100%; object-fit:contain; display:block;
+    transform:scale(2);
+  }
+  /* ---------- Back to Home button (top-right of header) ---------- */
+  .hero-home-link{
+    position:absolute; right:24px; top:50%; transform:translateY(-50%);
+    display:inline-flex; align-items:center; gap:8px;
+    background:#fff; border:1px solid #fff; color:#4c808a; text-decoration:none;
+    font-family:var(--sans); font-weight:600; font-size:13px;
+    padding:9px 16px; border-radius:3px; white-space:nowrap;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .hero-home-link:hover{ background:#EEF3F3; border-color:#EEF3F3; }
+  .hero-home-link svg{ width:14px; height:14px; flex-shrink:0; }
+  @media (max-width:720px){
+    .hero-home-link{ position:static; transform:none; margin:10px auto 0; }
+    .hero-topband{ flex-direction:column; gap:10px; padding-bottom:14px; }
+    .hero-logo-box{ position:static; transform:none; }
+  }
+
+  .hero-titleblock{ color:#fff; min-width:0; text-align:center; }
+  .hero-title{
+    font-family:var(--sans); font-weight:700; margin:0; line-height:1.15;
+    font-size:clamp(17px,2.1vw,24px); letter-spacing:-0.01em;
+  }
+  .hero-title .hero-title-accent{ font-weight:700; }
+  .hero-subtitle{
+    font-family:var(--serif); font-style:italic; font-weight:500;
+    font-size:13.5px; margin:5px 0 0; color:rgba(255,255,255,0.92);
+  }
+
+  /* Filter band */
+  .hero-filterband{ background:#fff; padding:18px 24px; }
+  .hero-filterband .filterbar-row{ margin-bottom:0; }
+  .hero-filterband .filterbar{
+    background:transparent; border:none; padding:0; gap:22px;
+    justify-content:space-between; width:100%;
+  }
+  .hero-filterband .filter-group{
+    flex:1 1 0; min-width:130px; display:flex; flex-direction:column; gap:6px;
+  }
+  .hero-filterband .filter-group label{
+    color:var(--brand-navy); font-weight:600; font-size:14px;
+    letter-spacing:0; text-transform:none; display:flex; align-items:center;
+    justify-content:space-between; gap:6px;
+  }
+  .hero-filterband .filter-icon{ color:var(--brand-teal); width:20px; height:15px; flex-shrink:0; }
+  .hero-filterband select{
+    background-color:var(--brand-teal); color:#fff; border:1px solid var(--brand-teal-deep);
+    font-weight:600; font-size:14px; width:100%; min-width:0;
+    padding:10px 34px 10px 12px; border-radius:3px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 8l8 10 8-10z' fill='%23ffffff'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 12px center; background-size:15px 15px;
+  }
+  .hero-filterband select:hover{ border-color:#fff; }
+  .hero-filterband select:focus-visible{ outline:2px solid var(--brand-navy); outline-offset:2px; }
+
+  /* Lens band */
+  .hero-lensband{ background:#EBEBEB; padding:14px 24px; }
+  .hero-lensband .lens-row{ margin-bottom:0; justify-content:center; }
+  .hero-lensband .lens-btn{
+    background:var(--brand-teal); color:#fff; border:1px solid var(--brand-teal);
+    border-radius:3px; font-weight:600;
+  }
+  .hero-lensband .lens-btn .dot{ display:none; }
+  .hero-lensband .lens-btn:hover{ background:var(--brand-teal-deep); border-color:var(--brand-teal-deep); color:#fff; }
+  .hero-lensband .lens-btn.active{ background:var(--brand-navy); border-color:var(--brand-navy); color:#fff; }
+  .hero-lensband .lens-btn:disabled{ background:transparent; color:var(--ink-faint); border-color:var(--hairline); opacity:.5; }
+  .hero-lensband .lens-btn:disabled:hover{ background:transparent; border-color:var(--hairline); color:var(--ink-faint); }
+
+  /* All Projects band */
+  .hero-projectband{ background:#fdfdfd; margin:0 -24px; padding:14px 24px 18px; text-align:center; box-shadow:0 4px 10px -8px rgba(34,50,44,0.3); }
+
+  /* ---------- Content band: Output through Regional Scorecard share the All-Projects background ---------- */
+  .content-band{
+    background:#fdfdfd; margin:0 -24px 34px; padding:34px 24px 1px;
+    box-shadow:0 4px 10px -8px rgba(34,50,44,0.3);
+  }
+  .content-band .section:last-child{ margin-bottom:0; padding-bottom:34px; }
+  .hero-projectband .projects-head{
+    font-family:var(--mono); font-weight:700; font-size:11.5px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--brand-navy);
+    padding-bottom:9px; margin-bottom:12px; border-bottom:1px solid rgba(0,0,0,0.1);
+  }
+  .hero-projectband .projects-row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .project-chip{
+    background:#fff; border:2px solid var(--brand-teal); color:var(--brand-teal);
+    font-family:var(--sans); font-weight:600; font-size:13px;
+    padding:8px 18px; border-radius:3px; white-space:nowrap;
+    cursor:pointer; transition:all .15s ease;
+    display:inline-block; text-decoration:none;
+  }
+  .project-chip:hover{ background:var(--brand-teal); color:#fff; }
+  .project-chip:focus-visible{ outline:2px solid var(--brand-navy); outline-offset:2px; }
+  .project-chip.active{ background:var(--brand-navy); border-color:var(--brand-navy); color:#fff; }
+
+  /* ---------- Header ---------- */
+  header.top{
+    margin-bottom:20px; padding-bottom:22px;
+    border-bottom:1px solid var(--hairline);
+  }
+  .brand-eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--gold); margin:0 0 8px;
+  }
+  h1.title{
+    font-family:var(--serif); font-weight:600; font-size:clamp(28px,3.4vw,42px);
+    margin:0; line-height:1.05; letter-spacing:-0.01em;
+  }
+  h1.title em{ font-style:italic; font-weight:400; color:var(--ink-dim); }
+  .subtitle{ color:var(--ink-dim); font-size:14px; margin-top:8px; max-width:520px; line-height:1.5; }
+
+  .filterbar-row{ display:flex; justify-content:center; margin-bottom:26px; }
+  .filterbar{
+    display:flex; gap:28px; align-items:center; flex-wrap:wrap; justify-content:center;
+    background:var(--surface); border:1px solid var(--hairline); border-radius:3px;
+    padding:10px 12px;
+  }
+  .filter-group{ display:flex; flex-direction:column; gap:3px; }
+  .filter-group label{
+    font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint);
+    padding-left:2px; display:flex; align-items:center; justify-content:space-between; gap:8px;
+  }
+  .filter-icon{ width:13px; height:13px; color:var(--gold); flex-shrink:0; }
+  select{
+    background:var(--surface-2); color:var(--ink); border:1px solid var(--hairline);
+    border-radius:3px; padding:7px 30px 7px 10px; font-size:13px; font-weight:500;
+    appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image: linear-gradient(45deg, transparent 50%, var(--ink-dim) 50%), linear-gradient(135deg, var(--ink-dim) 50%, transparent 50%);
+    background-position: calc(100% - 15px) center, calc(100% - 10px) center;
+    background-size: 5px 5px, 5px 5px; background-repeat:no-repeat;
+    min-width:118px;
+  }
+  select:hover{ border-color:var(--gold); }
+  select:focus-visible, button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+  .as-of{ font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); white-space:nowrap; padding-left:6px; border-left:1px solid var(--hairline); margin-left:2px; }
+
+
+  /* ---------- Lens toggle ---------- */
+  .lens-row{ display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; justify-content:center; }
+  .lens-btn{
+    background:transparent; border:1px solid var(--hairline); color:var(--ink-dim);
+    padding:8px 16px; border-radius:3px; font-size:12.5px; font-weight:600;
+    cursor:pointer; transition:all .15s ease; letter-spacing:.02em;
+    display:flex; align-items:center; gap:7px;
+  }
+  .lens-btn .dot{ width:7px; height:7px; border-radius:50%; background:currentColor; opacity:.6; }
+  .lens-btn:hover{ border-color:var(--ink-faint); color:var(--ink); }
+  .lens-btn.active{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .lens-btn.active .dot{ opacity:1; }
+  .lens-btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .lens-btn:disabled:hover{ border-color:var(--hairline); color:var(--ink-dim); }
+
+  /* ---------- Hero: growth rings ---------- */
+  .hero{
+    display:grid; grid-template-columns:340px 1fr; gap:36px;
+    background:var(--surface); border:1px solid var(--hairline); border-radius:3px;
+    padding:32px; margin-bottom:34px; align-items:center;
+  }
+  .rings-wrap{ display:flex; justify-content:center; }
+  .hero-copy .eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:10px;
+  }
+  .hero-copy h2{
+    font-family:var(--serif); font-size:26px; font-weight:600; margin:0 0 10px; line-height:1.15;
+  }
+  .hero-copy p{ color:var(--ink-dim); font-size:13.5px; line-height:1.6; max-width:480px; margin:0 0 22px; }
+  .stage-legend{ display:flex; flex-direction:column; gap:12px; }
+  .stage-row{ display:flex; align-items:center; gap:12px; }
+  .stage-swatch{ width:12px; height:12px; border-radius:3px; flex-shrink:0; }
+  .stage-name{ font-size:13px; color:var(--ink-dim); width:150px; }
+  .stage-value{ font-family:var(--mono); font-size:16px; font-weight:600; color:var(--ink); }
+  .stage-pct{ font-family:var(--mono); font-size:11.5px; color:var(--ink-faint); margin-left:auto; }
+
+  /* ---------- Outcome: dials & rulers ---------- */
+  .outcome-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px; }
+  .outcome-card{
+    background: var(--surface);
+    color: var(--parchment-ink);
+    border-radius:3px;
+    padding:16px 18px;
+    border:1px solid var(--card-border);
+    box-shadow:none;
+    position:relative; overflow:hidden;
+  }
+  .outcome-card.type-percent{ display:flex; align-items:center; gap:14px; }
+  .outcome-card.type-count{ display:block; }
+
+  .outcome-dial{ flex-shrink:0; width:60px; height:60px; position:relative; }
+  .outcome-dial svg{ width:100%; height:100%; display:block; }
+  .outcome-dial .dial-value{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:12.5px; font-weight:700; color:var(--card-value);
+  }
+
+  .outcome-info{ flex:1; min-width:0; }
+  .outcome-label{ font-size:11.5px; color:var(--card-label); line-height:1.35; }
+  .outcome-card.type-count .outcome-label{ margin-top:5px; text-align:center; }
+  .outcome-value{ font-family:var(--mono); font-size:19px; font-weight:700; color:var(--card-value); letter-spacing:-0.01em; text-align:center; }
+
+  .outcome-ruler-track{
+    width:100%; height:7px; background:rgba(43,35,24,0.14); border-radius:3px;
+    margin-top:10px; position:relative; overflow:hidden;
+  }
+  .outcome-ruler-fill{
+    position:absolute; left:0; top:0; bottom:0; background:#3B4167; border-radius:3px;
+    transition:width .5s ease;
+  }
+
+
+  /* ---------- KPI sections ---------- */
+  .section{ margin-bottom:34px; transition:opacity .25s ease, filter .25s ease; }
+  .section.dimmed{ opacity:.35; filter:grayscale(0.4); }
+  .section-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:14px; }
+  .section-title{ font-family:var(--serif); font-size:19px; font-weight:600; }
+  .section-note{ font-size:12px; color:var(--ink-faint); }
+
+  .kpi-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; }
+  .kpi-card{
+    background-color:var(--surface);
+    border:1px solid var(--card-border); border-radius:3px;
+    padding:16px 18px; position:relative; overflow:hidden;
+    transition:transform .15s ease, border-color .15s ease, opacity .25s ease, filter .25s ease;
+  }
+  .kpi-card:hover{ transform:translateY(-2px); border-color:var(--card-border); }
+  .kpi-card.dimmed{ opacity:.3; filter:grayscale(0.5); transform:none; }
+  .kpi-card.hidden-lens{ display:none; }
+  .kpi-ico{ display:block; width:28px; height:28px; margin:0 auto 8px; fill:none; stroke:var(--card-value); stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+  .kpi-label{ font-size:12px; color:var(--card-label); line-height:1.35; margin-top:10px; text-align:center; }
+  .kpi-value{ font-family:var(--mono); font-size:20px; font-weight:600; color:var(--card-value); letter-spacing:-0.01em; text-align:center; }
+
+  /* ---------- Charts ---------- */
+  .charts-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin-bottom:12px; }
+  .charts-grid .chart-body{ height:250px; }
+  .chart-card.wide{ grid-column:1/-1; }
+  .chart-body.bar-wide{ height:auto; display:block; margin:14px 0 6px; }
+  .chart-body.bar-wide svg{ width:100%; height:auto; display:block; max-width:1080px; margin:0 auto; }
+  .mini-stats-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-top:16px; }
+  .mini-stat{
+    background-color:var(--surface);
+    border:1px solid var(--card-border); border-radius:3px;
+    padding:14px; text-align:center;
+  }
+  .mini-stat-val{ font-family:var(--mono); font-size:21px; font-weight:700; color:var(--card-value); }
+  .mini-stat-label{ font-size:11.5px; color:var(--card-label); margin-top:6px; }
+  .trends-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; margin-bottom:12px; }
+  @media (max-width:860px){ .charts-grid, .trends-grid{ grid-template-columns:minmax(0,1fr); } }
+  .trends-grid .chart-body{ height:250px; }
+  .trends-grid .chart-body svg{ width:100%; height:100%; max-width:440px; }
+  #chartTrajectory{ max-width:640px; }
+  .axis-label{ font-family:Verdana, Geneva, sans-serif; font-size:12px; fill:var(--ink-faint); }
+  .value-label{ font-family:var(--mono); font-size:9.5px; fill:var(--ink); font-weight:600; }
+  .axis-label-lg{ font-family:Verdana, Geneva, sans-serif; font-size:16px; fill:var(--card-label); }
+  .value-label-lg{ font-family:var(--mono); font-size:13px; fill:var(--card-value); font-weight:700; }
+
+  /* ---------- Regional scorecard (heatmap) ---------- */
+  .scorecard{
+    background-color:var(--surface);
+    border:1px solid var(--card-border); border-radius:3px; padding:20px; overflow-x:auto;
+    position:relative;
+  }
+  .scorecard-table{ width:100%; border-collapse:separate; border-spacing:6px; min-width:560px; }
+  .scorecard-table th{ font-family:var(--mono); font-size:10px; letter-spacing:.04em; text-transform:uppercase; color:var(--card-label); font-weight:600; padding:0 8px 8px; text-align:center; }
+  .scorecard-table th.region-col{ width:110px; text-align:left; }
+  .scorecard-table td.region-name{ font-family:var(--serif); font-size:14px; font-weight:600; color:var(--card-label); padding:10px; white-space:nowrap; }
+  .score-cell{ border-radius:3px; padding:10px 12px; text-align:center; min-width:110px; }
+  .score-cell .score-val{ font-family:var(--mono); font-size:15px; font-weight:700; color:#FFF; }
+  .score-cell .score-label{ font-size:9.5px; color:#FFF; margin-top:2px; }
+  .chart-card{
+    background-color:var(--surface);
+    border:1px solid var(--card-border); border-radius:3px;
+    padding:20px; display:flex; flex-direction:column; position:relative; overflow:hidden;
+  }
+  .chart-head{ margin-bottom:6px; text-align:center; }
+  .chart-title{ font-family:var(--serif); font-size:16px; font-weight:600; color:var(--card-label); }
+  .chart-sub{ font-size:11.5px; color:var(--card-label); margin-top:2px; }
+  .chart-body{ position:relative; height:230px; margin:14px 0 6px; display:flex; align-items:center; justify-content:center; }
+  .chart-body svg{ width:200px; height:200px; }
+  #chartGender, #chartPartners{ width:100%; height:100%; max-width:420px; }
+  .chart-legend{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px 16px; font-size:11.5px; color:var(--ink-dim); margin-top:4px; }
+  .chart-legend span{ display:flex; align-items:center; gap:6px; }
+  .chart-legend i{ width:9px; height:9px; border-radius:3px; display:inline-block; }
+
+  @media (max-width:820px){
+    .hero{ grid-template-columns:1fr; }
+    .rings-wrap svg{ width:220px; height:220px; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .kpi-card, .section{ transition:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="sticky-header">
+    <div class="hero-topband">
+      <a class="hero-home-link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg> Home</a>
+      <div class="hero-logo-box" id="heroLogoBox">
+        <div class="hero-logo-inner">
+        <img id="heroLogoImg" src="data:image/png;base64,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gQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACBJoAIASBKoAACSBCoAgCSBCgAgSaACAEgSqAAAkgQqAIAkgQoAIEmgAgBIEqgAAJIEKgCAJIEKACDp/wPgfne0tA1nRAAAAABJRU5ErkJggg==" alt="Emerge4Biz logo">
+        </div>
+      </div>
+      <div class="hero-titleblock">
+        <h1 class="hero-title">Emerge4Biz Dashboard <span class="hero-title-accent">2019&ndash;2026 Reporting Period</span></h1>
+        <p class="hero-subtitle">Sustainable Entrepreneurship and Livelihoods Development</p>
+      </div>
+    </div>
+
+    <div class="hero-filterband">
+      <div class="filterbar-row">
+        <div class="filterbar">
+          <div class="filter-group">
+            <label for="yearSelect">Reporting Year <svg class="filter-icon" viewBox="0 0 64 48" aria-hidden="true"><path d="M4 3h24c2.2 0 3.4 2.5 2 4.3L20 20v18c0 2.2-1.8 4-4 4h-2c-2.2 0-4-1.8-4-4V20L1.9 7.3C.5 5.5 1.8 3 4 3z" fill="currentColor"/><rect x="34" y="1" width="14" height="6" rx="3" fill="currentColor"/><rect x="34" y="12" width="18" height="6" rx="3" fill="currentColor"/><rect x="34" y="23" width="22" height="6" rx="3" fill="currentColor"/><rect x="34" y="34" width="26" height="6" rx="3" fill="currentColor"/></svg></label>
+            <select id="yearSelect">
+              <option value="All" selected>All Years</option>
+              <option value="2019">2019</option>
+              <option value="2020">2020</option>
+              <option value="2021">2021</option>
+              <option value="2022">2022</option>
+              <option value="2023">2023</option>
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="regionSelect">Region <svg class="filter-icon" viewBox="0 0 64 48" aria-hidden="true"><path d="M4 3h24c2.2 0 3.4 2.5 2 4.3L20 20v18c0 2.2-1.8 4-4 4h-2c-2.2 0-4-1.8-4-4V20L1.9 7.3C.5 5.5 1.8 3 4 3z" fill="currentColor"/><rect x="34" y="1" width="14" height="6" rx="3" fill="currentColor"/><rect x="34" y="12" width="18" height="6" rx="3" fill="currentColor"/><rect x="34" y="23" width="22" height="6" rx="3" fill="currentColor"/><rect x="34" y="34" width="26" height="6" rx="3" fill="currentColor"/></svg></label>
+            <select id="regionSelect">
+              <option value="All">All Regions</option>
+              <option value="Central">Central</option>
+              <option value="Northern">Northern</option>
+              <option value="Southern">Southern</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="genderSelect">Gender <svg class="filter-icon" viewBox="0 0 64 48" aria-hidden="true"><path d="M4 3h24c2.2 0 3.4 2.5 2 4.3L20 20v18c0 2.2-1.8 4-4 4h-2c-2.2 0-4-1.8-4-4V20L1.9 7.3C.5 5.5 1.8 3 4 3z" fill="currentColor"/><rect x="34" y="1" width="14" height="6" rx="3" fill="currentColor"/><rect x="34" y="12" width="18" height="6" rx="3" fill="currentColor"/><rect x="34" y="23" width="22" height="6" rx="3" fill="currentColor"/><rect x="34" y="34" width="26" height="6" rx="3" fill="currentColor"/></svg></label>
+            <select id="genderSelect">
+              <option value="All" selected>All Genders</option>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="sectorSelect">Sector <svg class="filter-icon" viewBox="0 0 64 48" aria-hidden="true"><path d="M4 3h24c2.2 0 3.4 2.5 2 4.3L20 20v18c0 2.2-1.8 4-4 4h-2c-2.2 0-4-1.8-4-4V20L1.9 7.3C.5 5.5 1.8 3 4 3z" fill="currentColor"/><rect x="34" y="1" width="14" height="6" rx="3" fill="currentColor"/><rect x="34" y="12" width="18" height="6" rx="3" fill="currentColor"/><rect x="34" y="23" width="22" height="6" rx="3" fill="currentColor"/><rect x="34" y="34" width="26" height="6" rx="3" fill="currentColor"/></svg></label>
+            <select id="sectorSelect">
+              <option value="All" selected>All Sectors</option>
+              <option value="Agriculture">Agriculture</option>
+              <option value="Trade">Trade &amp; Retail</option>
+              <option value="Manufacturing">Manufacturing</option>
+              <option value="Services">Services</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="statusSelect">Project Status <svg class="filter-icon" viewBox="0 0 64 48" aria-hidden="true"><path d="M4 3h24c2.2 0 3.4 2.5 2 4.3L20 20v18c0 2.2-1.8 4-4 4h-2c-2.2 0-4-1.8-4-4V20L1.9 7.3C.5 5.5 1.8 3 4 3z" fill="currentColor"/><rect x="34" y="1" width="14" height="6" rx="3" fill="currentColor"/><rect x="34" y="12" width="18" height="6" rx="3" fill="currentColor"/><rect x="34" y="23" width="22" height="6" rx="3" fill="currentColor"/><rect x="34" y="34" width="26" height="6" rx="3" fill="currentColor"/></svg></label>
+            <select id="statusSelect">
+              <option value="All" selected>All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Completed">Completed</option>
+              <option value="Planned">Planned</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="locationSelect">District/City <svg class="filter-icon" viewBox="0 0 64 48" aria-hidden="true"><path d="M4 3h24c2.2 0 3.4 2.5 2 4.3L20 20v18c0 2.2-1.8 4-4 4h-2c-2.2 0-4-1.8-4-4V20L1.9 7.3C.5 5.5 1.8 3 4 3z" fill="currentColor"/><rect x="34" y="1" width="14" height="6" rx="3" fill="currentColor"/><rect x="34" y="12" width="18" height="6" rx="3" fill="currentColor"/><rect x="34" y="23" width="22" height="6" rx="3" fill="currentColor"/><rect x="34" y="34" width="26" height="6" rx="3" fill="currentColor"/></svg></label>
+            <select id="locationSelect">
+              <option value="All" selected>All districts</option>
+              <option value="Balaka">Balaka</option>
+              <option value="Blantyre">Blantyre</option>
+              <option value="Chikwawa">Chikwawa</option>
+              <option value="Chiradzulu">Chiradzulu</option>
+              <option value="Chitipa">Chitipa</option>
+              <option value="Dedza">Dedza</option>
+              <option value="Dowa">Dowa</option>
+              <option value="Karonga">Karonga</option>
+              <option value="Kasungu">Kasungu</option>
+              <option value="Likoma">Likoma</option>
+              <option value="Lilongwe">Lilongwe</option>
+              <option value="Machinga">Machinga</option>
+              <option value="Mangochi">Mangochi</option>
+              <option value="Mchinji">Mchinji</option>
+              <option value="Mulanje">Mulanje</option>
+              <option value="Mwanza">Mwanza</option>
+              <option value="Mzimba">Mzimba</option>
+              <option value="Mzuzu">Mzuzu</option>
+              <option value="Neno">Neno</option>
+              <option value="Nkhata Bay">Nkhata Bay</option>
+              <option value="Nkhotakota">Nkhotakota</option>
+              <option value="Nsanje">Nsanje</option>
+              <option value="Ntcheu">Ntcheu</option>
+              <option value="Ntchisi">Ntchisi</option>
+              <option value="Phalombe">Phalombe</option>
+              <option value="Rumphi">Rumphi</option>
+              <option value="Salima">Salima</option>
+              <option value="Thyolo">Thyolo</option>
+              <option value="Zomba">Zomba</option>
+            </select>
+          </div>
+          <!-- <span class="as-of" id="asOf">—</span> -->
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-lensband">
+      <div class="lens-row" id="lensRow">
+        <button class="lens-btn active" data-lens="enterprise"><span class="dot" style="color:var(--gold)"></span>Enterprise &amp; Finance</button>
+        <button class="lens-btn" data-lens="women"><span class="dot" style="color:var(--plum)"></span>Women</button>
+        <button class="lens-btn" data-lens="youth"><span class="dot" style="color:var(--teal)"></span>Youth</button>
+        <button class="lens-btn" data-lens="community"><span class="dot" style="color:var(--clay)"></span>Community &amp; Inclusion</button>
+        <button class="lens-btn" data-lens="partners"><span class="dot" style="color:var(--sage)"></span>Partnerships</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="hero-projectband">
+    <div class="projects-head">All Projects</div>
+    <div class="projects-row" id="projectsRow">
+      <a href="dashboards/do-dig.html" class="project-chip" data-project="dodig">Do Dig</a>
+      <a href="dashboards/digital-mwbiz.html" class="project-chip" data-project="digitalmwbiz">Digital Mw-Biz</a>
+      <a href="dashboards/hatchstart.html" class="project-chip" data-project="hatchstart">HatchStart</a>
+      <a href="dashboards/gj4ay.html" class="project-chip" data-project="gj4ay">GJ4A&amp;Y</a>
+      <a href="dashboards/esea.html" class="project-chip" data-project="esea">ESEA</a>
+      <a href="dashboards/aseld.html" class="project-chip" data-project="aseld">ASELD</a>
+      <a href="dashboards/zantchito.html" class="project-chip" data-project="zantchito">Zantchito</a>
+      <a href="dashboards/rear.html" class="project-chip" data-project="rear">REAR</a>
+      <a href="dashboards/kukolola.html" class="project-chip" data-project="kukolola">Kukolola</a>
+      <a href="dashboards/yeco.html" class="project-chip" data-project="yeco">YECO</a>
+    </div>
+  </div>
+
+  <!-- HERO: growth rings
+  <div class="hero">
+    <div class="rings-wrap">
+      <svg id="ringsSvg" width="260" height="260" viewBox="0 0 260 260"></svg>
+    </div>
+    <div class="hero-copy">
+      <p class="eyebrow">Signature metric — the enterprise pipeline</p>
+      <h2>From incubation to investment, one ring per stage.</h2>
+      <p>Each ring traces how far enterprises travel through the pipeline — the outer band is every business incubated; each inner band shows the share that advanced to acceleration and, finally, to financing.</p>
+      <div class="stage-legend" id="stageLegend"></div>
+    </div>
+  </div>
+  -->
+
+  <div class="content-band">
+  <!-- OUTPUT -->
+  <section class="section" data-section="output">
+    <div class="section-head">
+      <span class="section-title">Output</span>
+    </div>
+    <div class="kpi-grid" id="grid-output"></div>
+  </section>
+
+  <!-- CHARTS -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="chart-title">Gender Distribution</div>
+        <div class="chart-sub">Donut Chart Showing Gender Distribution of Individuals</div>
+      </div>
+      <div class="chart-body"><svg id="chartGender" viewBox="0 0 520 220"></svg></div>
+      <div class="chart-legend" id="legendGender"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="chart-title">Partners Engaged</div>
+        <div class="chart-sub">Donut Chart Showing Local vs. International Partners Distribution</div>
+      </div>
+      <div class="chart-body"><svg id="chartPartners" viewBox="0 0 520 220"></svg></div>
+      <div class="chart-legend" id="legendPartners"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="chart-title">Age Group Distribution</div>
+        <div class="chart-sub">Grouped Bar Showing Age Group Distribution of Individuals</div>
+      </div>
+      <div class="chart-body bar-wide"><svg id="chartAgeGroup" viewBox="0 0 860 260"></svg></div>
+      <div class="chart-legend" id="legendAgeGroup"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="chart-title">Emerge4Biz Project Components by Participants</div>
+        <div class="chart-sub">Stacked Bar Showing Female &amp; Male Individuals by Program Component</div>
+      </div>
+      <div class="chart-body bar-wide"><svg id="chartComponents" viewBox="0 0 1080 250"></svg></div>
+      <div class="chart-legend" id="legendComponents"></div>
+      <div class="mini-stats-row" id="miniStatsComponents"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="chart-title">Projects Implemented by Reach</div>
+        <div class="chart-sub">Bar Chart Showing Total Individuals Reached by Project</div>
+      </div>
+      <div class="chart-body bar-wide"><svg id="chartProjectsReach" viewBox="0 0 1080 386"></svg></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <div class="chart-title">Business Sectors by Participant Count</div>
+        <div class="chart-sub">Stacked Bar Showing Female &amp; Male Individuals by Sector</div>
+      </div>
+      <div class="chart-body bar-wide"><svg id="chartSectors" viewBox="0 0 1080 350"></svg></div>
+      <div class="chart-legend" id="legendSectors"></div>
+    </div>
+  </div>
+
+  <!-- OUTCOME -->
+  <section class="section" data-section="outcome-wrap">
+    <div class="section-head">
+      <span class="section-title">Outcome</span>
+    </div>
+    <div class="outcome-grid" id="grid-outcome"></div>
+  </section>
+
+  <!-- TRENDS & COMPARISONS -->
+  <section class="section" data-section="trends-wrap">
+    <div class="section-head">
+      <span class="section-title">Trends &amp; Comparisons</span>
+    </div>
+    <div class="trends-grid">
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Results Chain: Financing, Survival, Growth</div>
+          <div class="chart-sub">Funnel Output Showing Count Carried Through Two Outcome Conversion Rates</div>
+        </div>
+        <div class="chart-body"><svg id="chartResultsChain" viewBox="0 0 320 200"></svg></div>
+        <div class="chart-legend" id="legendResultsChain"></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Outcome Quality Over Time</div>
+          <div class="chart-sub">Line Showing Whether Programme Quality Is Improving, Not Just Reach</div>
+        </div>
+        <div class="chart-body"><svg id="chartOutcomeTrend" viewBox="-14 0 348 220"></svg></div>
+        <div class="chart-legend" id="legendOutcomeTrend"></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Enterprise Capability Profile</div>
+          <div class="chart-sub">Radar Showing Six Outcome Signals Plotted Together</div>
+        </div>
+        <div class="chart-body"><svg id="chartRadar" viewBox="-50 0 360 260"></svg></div>
+        <div class="chart-legend" id="legendRadar"></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Growth Trajectory, 2019–2026</div>
+          <div class="chart-sub">Combo Showing Grant Disbursed &amp; Businesses financed Yearly.</div>
+        </div>
+        <div class="chart-body"><svg id="chartTrajectory" viewBox="0 0 620 220"></svg></div>
+        <div class="chart-legend" id="legendTrajectory"></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Women vs. Youth: Reach to Results</div>
+          <div class="chart-sub">Grouped Bars Showing Individuals Engaged, Trained, Mentored &amp; Coached</div>
+        </div>
+        <div class="chart-body"><svg id="chartGrouped" viewBox="-8 0 352 220"></svg></div>
+        <div class="chart-legend" id="legendGrouped"></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <div class="chart-title">Job Creation by Region</div>
+          <div class="chart-sub">Horizontal Bars Showing Total Jobs Created in Central, Northern &amp; Southern Region</div>
+        </div>
+        <div class="chart-body"><svg id="chartRegional" viewBox="-6 0 340 180"></svg></div>
+        <div class="chart-legend" id="legendRegional"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REGIONAL SCORECARD -->
+  <section class="section" data-section="scorecard-wrap">
+    <div class="section-head">
+      <span class="section-title">Regional Scorecard</span>
+    </div>
+    <div class="scorecard">
+      <table class="scorecard-table" id="scorecardTable">
+        <thead>
+          <tr>
+            <th class="region-col">Region</th>
+            <th>Businesses Financed</th>
+            <th>Grant Disbursed</th>
+            <th>Jobs Created</th>
+            <th>Still Operating</th>
+          </tr>
+        </thead>
+        <tbody id="scorecardBody"></tbody>
+      </table>
+    </div>
+  </section>
+  </div>
+
+</div>
+
+<script>
+/* ---------------------------------------------------------------
+   1. DATA MODEL — deterministic mock data per Region x Year.
+   Replace `rawData` with a real feed to make this dashboard live.
+------------------------------------------------------------------*/
+const YEARS = ['2019','2020','2021','2022','2023','2024','2025','2026'];
+const REGIONS = ['Central','Northern','Southern'];
+
+// Raw fields generated per Region x Year (superset — includes fields like
+// partnersLocal/partnersIntl that feed charts even though the KPI card below
+// shows them combined as one "Output" line).
+const rawMetricKeys = [
+  'incubated','accelerated','financed','adoptedPlans','grant',
+  'womenEngaged','womenReached','womenTrained','womenMentored','womenLedFinanced',
+  'youthEngaged','youthTrained','youthMentored','youthLedFinanced',
+  'communityGeneral','pwds','idps','refugees',
+  'partnersLocal','partnersIntl',
+  'genderMale','genderFemale'
+];
+
+// Output — the single reporting category. Order matches the programme
+// reporting sheet exactly.
+const metricsConfig = [
+  { key:'incubated',        label:'Business Incubated',                                                     cat:'enterprise' },
+  { key:'accelerated',      label:'Business Accelerated',                                                   cat:'enterprise' },
+  { key:'financed',         label:'Business Financed',                                                      cat:'enterprise' },
+  { key:'womenEngaged',     label:'Total Number of Women Engaged',                                          cat:'women' },
+  { key:'womenReached',     label:'Total Number of Women Reached',                                          cat:'women' },
+  { key:'womenMentored',    label:'Total of Women Mentored and Coached',                                    cat:'women' },
+  { key:'womenTrained',     label:'Total of Women Trained',                                                 cat:'women' },
+  { key:'youthMentored',    label:'Total of Youth Mentored and Coached',                                    cat:'youth' },
+  { key:'youthTrained',     label:'Total of Youth Trained',                                                 cat:'youth' },
+  { key:'youthLedFinanced', label:'Total Number of Youth-Led Enterprise Financed',                          cat:'youth' },
+  { key:'womenLedFinanced', label:'Total Number of Women-Led Enterprise Financed',                          cat:'women' },
+  { key:'grant',            label:'Total Grant Disbursed',                                                  cat:'enterprise', currency:true },
+  { key:'partnersTotal',    label:'Partners Engaged Locally & Internationally',                              cat:'partners', derived:true },
+  { key:'youthEngaged',     label:'Youth Engaged — Information Sessions, Trainings, Coaching & Mentorship',  cat:'youth' },
+  { key:'communityGeneral', label:'Community Members Reached in General (Information)',                      cat:'community' },
+  { key:'pwds',             label:'PWDs Reached',                                                            cat:'community' },
+  { key:'adoptedPlans',     label:'Number of Enterprises with Adopted Business Plans',                       cat:'enterprise' },
+  { key:'idps',             label:'Internally Displaced People Reached',                                    cat:'community' },
+  { key:'refugees',         label:'Refugees Reached',                                                        cat:'community' },
+];
+
+const baseValues = {
+  incubated:45, accelerated:28, financed:16, adoptedPlans:62, grant:185000,
+  womenEngaged:2400, womenReached:6200, womenTrained:980, womenMentored:540, womenLedFinanced:11,
+  youthEngaged:1900, youthTrained:820, youthMentored:460, youthLedFinanced:9,
+  communityGeneral:12500, pwds:340, idps:210, refugees:95,
+  partnersLocal:14, partnersIntl:6,
+  genderMale:423, genderFemale:551
+};
+const regionMult = { Central:1.0, Northern:0.72, Southern:0.85 };
+const yearMult   = { '2019':0.46, '2020':0.56, '2021':0.68, '2022':0.82, '2023':1.0, '2024':1.22, '2025':1.48, '2026':1.80 };
+
+function seededVar(seed){
+  const f = Math.abs(Math.sin(seed*12.9898)*43758.5453) % 1;
+  return 0.92 + f*0.16; // ~0.92–1.08
+}
+
+const rawData = {};
+YEARS.forEach((y,yi)=>{
+  rawData[y] = {};
+  REGIONS.forEach((r,ri)=>{
+    rawData[y][r] = {};
+    rawMetricKeys.forEach((key,mi)=>{
+      const seed = (mi+1)*31 + (ri+1)*7 + (yi+1)*3;
+      const v = baseValues[key] * regionMult[r] * yearMult[y] * seededVar(seed);
+      rawData[y][r][key] = Math.round(v);
+    });
+  });
+});
+
+function aggregate(yearFilter, regionFilter){
+  const years = yearFilter==='All' ? YEARS : [yearFilter];
+  const regions = regionFilter==='All' ? REGIONS : [regionFilter];
+  const out = {};
+  rawMetricKeys.forEach(key=> out[key]=0 );
+  years.forEach(y=> regions.forEach(r=>{
+    rawMetricKeys.forEach(key=> out[key]+= rawData[y][r][key]);
+  }));
+  out.partnersTotal = out.partnersLocal + out.partnersIntl;
+  return out;
+}
+
+function prevYearAggregate(yearFilter, regionFilter){
+  if(yearFilter==='All') return null;
+  const idx = YEARS.indexOf(yearFilter);
+  if(idx<=0) return null;
+  return aggregate(YEARS[idx-1], regionFilter);
+}
+
+/* ---------------------------------------------------------------
+   1b. OUTCOME DATA MODEL — measured signals, not raw tallies.
+   Percent-type metrics are averaged across the selection; count-type
+   metrics are summed, same convention as Output.
+------------------------------------------------------------------*/
+const outcomeMetricsConfig = [
+  { key:'enterprisesOperating',     label:'% of Enterprises Still in Operation',                        type:'percent', base:72 },
+  { key:'jobsCreated',              label:'Job Creation',                                               type:'count',   base:410, unit:'jobs' },
+  { key:'customerBase',             label:'Customer Base',                                              type:'count',   base:8600, unit:'customers' },
+  { key:'financialMgmtAdoption',    label:'Adoption of Financial Management Systems',                   type:'percent', base:54 },
+  { key:'revenueIncrease',          label:'Revenue Increase',                                           type:'percent', base:38 },
+  { key:'greenAdaptation',          label:'Adaptation to Green Business — Climate Mitigation Measures',  type:'percent', base:41 },
+  { key:'businessRegistration',     label:'Business Registration',                                      type:'count',   base:120, unit:'businesses' },
+  { key:'productDiversification',   label:'Product Diversification',                                    type:'percent', base:47 },
+  { key:'newMarketLinkages',        label:'New Market Linkages (Export Markets)',                       type:'count',   base:24, unit:'linkages' },
+  { key:'newInvestorLinkages',      label:'Linkages to New Investors',                                  type:'count',   base:17, unit:'linkages' },
+  { key:'digitalMarketingAdoption', label:'Digital Marketing Adoption (Facebook, Google, Canva)',        type:'percent', base:63 },
+];
+
+const outcomeRawData = {};
+YEARS.forEach((y,yi)=>{
+  outcomeRawData[y] = {};
+  REGIONS.forEach((r,ri)=>{
+    outcomeRawData[y][r] = {};
+    outcomeMetricsConfig.forEach((m,mi)=>{
+      const seed = (mi+1)*17 + (ri+1)*11 + (yi+1)*5 + 100;
+      if(m.type==='percent'){
+        const drift = (yearMult[y]-1) * 0.55;               // percent metrics improve, not multiply
+        const v = (m.base * regionMult[r]) * (1+drift) * seededVar(seed);
+        outcomeRawData[y][r][m.key] = Math.max(6, Math.min(96, Math.round(v)));
+      } else {
+        const v = m.base * regionMult[r] * yearMult[y] * seededVar(seed);
+        outcomeRawData[y][r][m.key] = Math.round(v);
+      }
+    });
+  });
+});
+
+function aggregateOutcome(yearFilter, regionFilter){
+  const years = yearFilter==='All' ? YEARS : [yearFilter];
+  const regions = regionFilter==='All' ? REGIONS : [regionFilter];
+  const out = {};
+  outcomeMetricsConfig.forEach(m=>{
+    const cells = [];
+    years.forEach(y=> regions.forEach(r=> cells.push(outcomeRawData[y][r][m.key])));
+    out[m.key] = m.type==='percent'
+      ? Math.round(cells.reduce((a,b)=>a+b,0)/cells.length)
+      : cells.reduce((a,b)=>a+b,0);
+  });
+  return out;
+}
+
+function prevOutcomeAggregate(yearFilter, regionFilter){
+  if(yearFilter==='All') return null;
+  const idx = YEARS.indexOf(yearFilter);
+  if(idx<=0) return null;
+  return aggregateOutcome(YEARS[idx-1], regionFilter);
+}
+
+// Reference ceiling for each count-type ruler: the largest possible sum
+// (all years, all regions), so a bar's fill reads as "share of full period".
+const outcomeMax = aggregateOutcome('All','All');
+
+/* ---------------------------------------------------------------
+   2. RENDER HELPERS
+------------------------------------------------------------------*/
+
+const fmt = n => n.toLocaleString('en-US');
+const fmtCurrency = n => 'MWK ' + n.toLocaleString('en-US');
+/* Icons: Lucide (https://lucide.dev, ISC licence) — hand-designed open-source set, 24x24 stroke glyphs.
+   Each icon is chosen for what the card measures. */
+const KPI_ICONS = {
+  incubated: '<path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3"/> <path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4"/> <path d="M5 21h14"/>', /* sprout */
+  accelerated: '<path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/> <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09"/> <path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z"/> <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05"/>', /* rocket */
+  financed: '<path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17"/> <path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9"/> <path d="m2 16 6 6"/> <circle cx="16" cy="9" r="2.9"/> <circle cx="6" cy="5" r="3"/>', /* hand-coins */
+  adoptedPlans: '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/> <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/> <path d="m9 14 2 2 4-4"/>', /* clipboard-check */
+  grant: '<rect width="20" height="12" x="2" y="6" rx="2"/> <circle cx="12" cy="12" r="2"/> <path d="M6 12h.01M18 12h.01"/>', /* banknote */
+  womenEngaged: '<path d="M16 10a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 14.286V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/> <path d="M20 9a2 2 0 0 1 2 2v10.286a.71.71 0 0 1-1.212.502l-2.202-2.202A2 2 0 0 0 17.172 19H10a2 2 0 0 1-2-2v-1"/>', /* messages-square */
+  womenReached: '<path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/> <path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/> <path d="M8 6v8"/>', /* megaphone */
+  womenMentored: '<path d="M19.414 14.414C21 12.828 22 11.5 22 9.5a5.5 5.5 0 0 0-9.591-3.676.6.6 0 0 1-.818.001A5.5 5.5 0 0 0 2 9.5c0 2.3 1.5 4 3 5.5l5.535 5.362a2 2 0 0 0 2.879.052 2.12 2.12 0 0 0-.004-3 2.124 2.124 0 1 0 3-3 2.124 2.124 0 0 0 3.004 0 2 2 0 0 0 0-2.828l-1.881-1.882a2.41 2.41 0 0 0-3.409 0l-1.71 1.71a2 2 0 0 1-2.828 0 2 2 0 0 1 0-2.828l2.823-2.762"/>', /* heart-handshake */
+  womenTrained: '<path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/> <path d="M22 10v6"/> <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>', /* graduation-cap */
+  womenLedFinanced: '<path d="M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5"/> <path d="M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244"/> <path d="M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05"/>', /* store */
+  youthEngaged: '<path d="M16 10a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 14.286V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/> <path d="M20 9a2 2 0 0 1 2 2v10.286a.71.71 0 0 1-1.212.502l-2.202-2.202A2 2 0 0 0 17.172 19H10a2 2 0 0 1-2-2v-1"/>', /* messages-square */
+  youthMentored: '<path d="M11 12h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 14"/> <path d="m7 18 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9"/> <path d="m2 13 6 6"/>', /* hand-helping */
+  youthTrained: '<path d="M12 5v16"/> <path d="m16 12 2 2 4-4"/> <path d="M22 6V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2h4.001A2 2 0 0022 17v-1.344"/>', /* book-open-check */
+  youthLedFinanced: '<path d="M12 12h.01"/> <path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/> <path d="M22 13a18.15 18.15 0 0 1-20 0"/> <rect width="20" height="14" x="2" y="6" rx="2"/>', /* briefcase-business */
+  partnersTotal: '<path d="m11 17 2 2a1 1 0 1 0 3-3"/> <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/> <path d="m21 3 1 11h-2"/> <path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/> <path d="M3 4h8"/>', /* handshake */
+  communityGeneral: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/> <path d="M16 3.128a4 4 0 0 1 0 7.744"/> <path d="M22 21v-2a4 4 0 0 0-3-3.87"/> <circle cx="9" cy="7" r="4"/>', /* users */
+  pwds: '<circle cx="16" cy="4" r="1"/> <path d="m18 19 1-7-6 1"/> <path d="m5 8 3-3 5.5 3-2.36 3.5"/> <path d="M4.24 14.5a5 5 0 0 0 6.88 6"/> <path d="M13.76 17.5a5 5 0 0 0-6.88-6"/>', /* accessibility */
+  idps: '<path d="M3.5 21 14 3"/> <path d="M20.5 21 10 3"/> <path d="M15.5 21 12 15l-3.5 6"/> <path d="M2 21h20"/>', /* tent */
+  refugees: '<path d="M6 20a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2"/> <path d="M8 18V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v14"/> <path d="M10 20h4"/> <circle cx="16" cy="20" r="2"/> <circle cx="8" cy="20" r="2"/>', /* luggage */
+};
+const kpiIcon = key => KPI_ICONS[key] ? `<svg class="kpi-ico" viewBox="0 0 24 24" aria-hidden="true">${KPI_ICONS[key]}</svg>` : '';
+
+function buildCards(){
+  const grid = document.getElementById('grid-output');
+  grid.innerHTML = '';
+  metricsConfig.forEach(m=>{
+    const card = document.createElement('div');
+    card.className = 'kpi-card';
+    card.dataset.key = m.key;
+    card.dataset.theme = m.cat;
+    card.innerHTML = `
+      ${kpiIcon(m.key)}
+      <div class="kpi-value" id="val-${m.key}">—</div>
+      <div class="kpi-label">${m.label}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function updateCards(data, prevData, yearFilter){
+  metricsConfig.forEach(m=>{
+    const val = data[m.key];
+    document.getElementById('val-'+m.key).textContent = m.currency ? fmtCurrency(val) : fmt(val);
+  });
+}
+
+/* ---------- Outcome cards: dials (percent) & rulers (count) ---------- */
+function dialSvg(id){
+  return `<svg viewBox="0 0 60 60">
+    <circle cx="30" cy="30" r="24" fill="none" stroke="rgba(43,35,24,0.14)" stroke-width="7"/>
+    <circle id="${id}" cx="30" cy="30" r="24" fill="none" stroke="#3B4167" stroke-width="7"
+      stroke-linecap="round" transform="rotate(-90 30 30)" stroke-dasharray="0 151"/>
+  </svg>`;
+}
+
+function buildOutcomeCards(){
+  const grid = document.getElementById('grid-outcome');
+  grid.innerHTML = '';
+  outcomeMetricsConfig.forEach(m=>{
+    const card = document.createElement('div');
+    card.className = 'outcome-card type-'+m.type;
+    card.dataset.key = m.key;
+    if(m.type==='percent'){
+      card.innerHTML = `
+        <div class="outcome-dial">
+          ${dialSvg('dial-'+m.key)}
+          <div class="dial-value" id="dialval-${m.key}">—</div>
+        </div>
+        <div class="outcome-info">
+          <div class="outcome-label">${m.label}</div>
+        </div>`;
+    } else {
+      card.innerHTML = `
+        <div class="outcome-value" id="oval-${m.key}">—</div>
+        <div class="outcome-label">${m.label}</div>
+        <div class="outcome-ruler-track">
+          <div class="outcome-ruler-fill" id="ofill-${m.key}" style="width:0%"></div>
+        </div>`;
+    }
+    grid.appendChild(card);
+  });
+}
+
+function updateOutcomeCards(data, prevData){
+  const circumference = 2*Math.PI*24; // r=24
+  outcomeMetricsConfig.forEach(m=>{
+    const val = data[m.key];
+
+    if(m.type==='percent'){
+      const dial = document.getElementById('dial-'+m.key);
+      dial.setAttribute('stroke-dasharray', `${circumference*(val/100)} ${circumference}`);
+      document.getElementById('dialval-'+m.key).textContent = val+'%';
+    } else {
+      const frac = outcomeMax[m.key] ? Math.min(val/outcomeMax[m.key], 1) : 0;
+      document.getElementById('oval-'+m.key).textContent = fmt(val)+ (m.unit ? ' '+m.unit : '');
+      document.getElementById('ofill-'+m.key).style.width = (frac*100).toFixed(0)+'%';
+    }
+  });
+}
+
+
+const RING_STAGES = [
+  { key:'incubated',   label:'Incubated',   color:'#D9A441' },
+  { key:'accelerated', label:'Accelerated', color:'#E0B968' },
+  { key:'financed',    label:'Financed',    color:'#F0D9A0' },
+];
+function drawRings(data){
+  const svg = document.getElementById('ringsSvg');
+  if(!svg) return; // hero section currently commented out
+  const cx=130, cy=130;
+  const radii = [110, 82, 54];
+  const stroke = 20;
+  svg.innerHTML = '';
+  const total = data.incubated || 1;
+
+  RING_STAGES.forEach((stage, i)=>{
+    const r = radii[i];
+    const circumference = 2*Math.PI*r;
+    const value = data[stage.key];
+    const frac = Math.min(value/total, 1);
+
+    // track
+    const track = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    track.setAttribute('cx',cx); track.setAttribute('cy',cy); track.setAttribute('r',r);
+    track.setAttribute('fill','none');
+    track.setAttribute('stroke','rgba(34,50,44,0.10)');
+    track.setAttribute('stroke-width',stroke);
+    svg.appendChild(track);
+
+    // arc
+    const arc = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    arc.setAttribute('cx',cx); arc.setAttribute('cy',cy); arc.setAttribute('r',r);
+    arc.setAttribute('fill','none');
+    arc.setAttribute('stroke',stage.color);
+    arc.setAttribute('stroke-width',stroke);
+    arc.setAttribute('stroke-linecap','round');
+    arc.setAttribute('stroke-dasharray', `${circumference*frac} ${circumference}`);
+    arc.setAttribute('transform', `rotate(-90 ${cx} ${cy})`);
+    arc.style.transition = 'stroke-dasharray .5s ease';
+    svg.appendChild(arc);
+  });
+
+  // center label
+  const label = document.createElementNS('http://www.w3.org/2000/svg','text');
+  label.setAttribute('x',cx); label.setAttribute('y',cy-4);
+  label.setAttribute('text-anchor','middle');
+  label.setAttribute('font-family','Verdana, Geneva, sans-serif');
+  label.setAttribute('font-size','22');
+  label.setAttribute('font-weight','600');
+  label.setAttribute('fill','#22322C');
+  label.textContent = data.financed;
+  svg.appendChild(label);
+  const label2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+  label2.setAttribute('x',cx); label2.setAttribute('y',cy+16);
+  label2.setAttribute('text-anchor','middle');
+  label2.setAttribute('font-family','Verdana, Geneva, sans-serif');
+  label2.setAttribute('font-size','10');
+  label2.setAttribute('fill','#6C7A70');
+  label2.textContent = 'financed';
+  svg.appendChild(label2);
+}
+function updateStageLegend(data){
+  const total = data.incubated || 1;
+  const wrap = document.getElementById('stageLegend');
+  if(!wrap) return; // hero section currently commented out
+  wrap.innerHTML = '';
+  RING_STAGES.forEach(stage=>{
+    const value = data[stage.key];
+    const pct = ((value/total)*100).toFixed(0);
+    const row = document.createElement('div');
+    row.className = 'stage-row';
+    row.innerHTML = `
+      <span class="stage-swatch" style="background:${stage.color}"></span>
+      <span class="stage-name">${stage.label}</span>
+      <span class="stage-value">${fmt(value)}</span>
+      <span class="stage-pct">${stage.key==='incubated' ? '100% base' : pct+'% of incubated'}</span>
+    `;
+    wrap.appendChild(row);
+  });
+  const plansRow = document.createElement('div');
+  plansRow.className = 'stage-row';
+  plansRow.innerHTML = `
+    <span class="stage-swatch" style="background:var(--sage)"></span>
+    <span class="stage-name">Adopted business plans</span>
+    <span class="stage-value">${fmt(data.adoptedPlans)}</span>
+    <span class="stage-pct">supporting cohort</span>
+  `;
+  wrap.appendChild(plansRow);
+}
+
+/* ---------- Dependency-free SVG pie / donut renderer ---------- */
+function buildLegend(el, labels, colors, values){
+  el.innerHTML = labels.map((l,i)=>`<span><i style="background:${colors[i]}"></i>${l}</span>`).join('');
+}
+
+function polarPoint(cx, cy, r, angleDeg){
+  const rad = (angleDeg-90) * Math.PI/180;
+  return [cx + r*Math.cos(rad), cy + r*Math.sin(rad)];
+}
+
+// Renders a pie/donut into an <svg viewBox="0 0 W H"> element.
+// values: array of numbers, colors: array of hex strings, donut: boolean cutout
+// showLabels: when true, draws "value (pct%)" labels with pointer lines outside each slice (a centre total is always drawn on donuts)
+function renderPieChart(svgEl, values, colors, donut, showLabels){
+  const vb = svgEl.viewBox.baseVal;
+  const cx = vb.width/2, cy = vb.height/2, r = Math.min(vb.width, vb.height) * 0.4;
+  const total = values.reduce((a,b)=>a+b,0) || 1;
+  svgEl.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+
+  let startAngle = 0;
+  const midAngles = [];
+  values.forEach((v,i)=>{
+    const angle = (v/total)*360;
+    if(angle <= 0){ midAngles.push(null); return; }
+    const endAngle = startAngle + angle;
+    const large = angle > 180 ? 1 : 0;
+
+    let d;
+    if(angle >= 359.999){
+      // full circle edge case
+      d = `M ${cx-r} ${cy} A ${r} ${r} 0 1 1 ${cx+r} ${cy} A ${r} ${r} 0 1 1 ${cx-r} ${cy} Z`;
+    } else {
+      const [sx,sy] = polarPoint(cx,cy,r,startAngle);
+      const [ex,ey] = polarPoint(cx,cy,r,endAngle);
+      d = `M ${cx} ${cy} L ${sx} ${sy} A ${r} ${r} 0 ${large} 1 ${ex} ${ey} Z`;
+    }
+    const path = document.createElementNS(ns,'path');
+    path.setAttribute('d', d);
+    path.setAttribute('fill', colors[i % colors.length]);
+    path.setAttribute('stroke', '#FFFFFF');
+    path.setAttribute('stroke-width', '2');
+    svgEl.appendChild(path);
+
+    midAngles.push(startAngle + angle/2);
+    startAngle = endAngle;
+  });
+
+  if(donut){
+    const hole = document.createElementNS(ns,'circle');
+    hole.setAttribute('cx',cx); hole.setAttribute('cy',cy); hole.setAttribute('r', r*0.6);
+    hole.setAttribute('fill', '#FFFFFF');
+    svgEl.appendChild(hole);
+
+    const label = document.createElementNS(ns,'text');
+    label.setAttribute('x',cx); label.setAttribute('y',cy+5);
+    label.setAttribute('text-anchor','middle');
+    label.setAttribute('font-family','Verdana, Geneva, sans-serif');
+    label.setAttribute('font-size','18');
+    label.setAttribute('font-weight','700');
+    label.setAttribute('fill','#22322C');
+    label.textContent = fmt(total);
+    svgEl.appendChild(label);
+  }
+
+  if(showLabels){
+    values.forEach((v,i)=>{
+      if(midAngles[i]==null) return;
+      const pct = ((v/total)*100).toFixed(2);
+      // pointer line: slice edge -> elbow -> short horizontal run -> label
+      const [x1,y1] = polarPoint(cx,cy,r+2,midAngles[i]);
+      const [x2,y2] = polarPoint(cx,cy,r+18,midAngles[i]);
+      const right = x2 >= cx;
+      const x3 = x2 + (right ? 16 : -16);
+      const line = document.createElementNS(ns,'polyline');
+      line.setAttribute('points', `${x1},${y1} ${x2},${y2} ${x3},${y2}`);
+      line.setAttribute('fill','none');
+      line.setAttribute('stroke','#57685F');
+      line.setAttribute('stroke-width','1');
+      svgEl.appendChild(line);
+      const dot = document.createElementNS(ns,'circle');
+      dot.setAttribute('cx',x1); dot.setAttribute('cy',y1); dot.setAttribute('r','2');
+      dot.setAttribute('fill','#57685F');
+      svgEl.appendChild(dot);
+      const t = document.createElementNS(ns,'text');
+      t.setAttribute('x', x3 + (right ? 5 : -5)); t.setAttribute('y',y2+4);
+      t.setAttribute('text-anchor', right ? 'start' : 'end');
+      t.setAttribute('font-family','Verdana, Geneva, sans-serif');
+      t.setAttribute('font-size','12');
+      t.setAttribute('fill','var(--ink-dim)');
+      t.textContent = `${fmt(v)} (${pct}%)`;
+      svgEl.appendChild(t);
+    });
+  }
+}
+
+function updateCharts(data){
+  // 1. Gender distribution (donut)
+  const l1 = ['Male','Female'];
+  const v1 = [data.genderMale, data.genderFemale];
+  const c1 = ['#4C808B','#3C4268'];
+  renderPieChart(document.getElementById('chartGender'), v1, c1, true, true);
+  buildLegend(document.getElementById('legendGender'), l1, c1, v1);
+
+  // 2. Partners (donut)
+  const l2 = ['Local Partners','International Partners'];
+  const v2 = [data.partnersLocal, data.partnersIntl];
+  const c2 = ['#3B4167','#4C808A'];
+  renderPieChart(document.getElementById('chartPartners'), v2, c2, true, true);
+  buildLegend(document.getElementById('legendPartners'), l2, c2, v2);
+}
+
+/* ---------------------------------------------------------------
+   2b. TRENDS & COMPARISONS — radar, combo, grouped-bar, h-bar
+------------------------------------------------------------------*/
+const ns = 'http://www.w3.org/2000/svg';
+// Navy -> teal gradient. GRAD_CSS is used for legend swatches; svgPaint() turns it into an SVG gradient fill/stroke.
+const GRAD_CSS = 'linear-gradient(90deg,#3B4167,#4C808A)';
+function svgPaint(svg, color, key, span){
+  if(color !== GRAD_CSS) return color;
+  let defs = svg.querySelector('defs');
+  if(!defs){ defs = document.createElementNS(ns,'defs'); svg.insertBefore(defs, svg.firstChild); }
+  const id = 'grad-' + svg.id + '-' + key;
+  let g = defs.querySelector('#'+id);
+  if(!g){
+    g = document.createElementNS(ns,'linearGradient');
+    g.setAttribute('id', id);
+    if(span){   // absolute coordinates (used for lines, whose bounding box can be flat)
+      g.setAttribute('gradientUnits','userSpaceOnUse');
+      g.setAttribute('x1', span[0]); g.setAttribute('x2', span[1]); g.setAttribute('y1','0'); g.setAttribute('y2','0');
+    } else { g.setAttribute('x1','0'); g.setAttribute('x2','1'); g.setAttribute('y1','0'); g.setAttribute('y2','0'); }
+    [['0','#3B4167'],['1','#4C808A']].forEach(([o,c])=>{
+      const st = document.createElementNS(ns,'stop'); st.setAttribute('offset',o); st.setAttribute('stop-color',c); g.appendChild(st);
+    });
+    defs.appendChild(g);
+  }
+  return 'url(#'+id+')';
+}
+function svgEl(tag, attrs){
+  const el = document.createElementNS(ns, tag);
+  Object.entries(attrs).forEach(([k,v])=> el.setAttribute(k, v));
+  return el;
+}
+
+// ---- Radar chart: n axes, values 0-100 ----
+function renderRadar(svg, axes, values){
+  svg.innerHTML = '';
+  const cx=130, cy=122, r=88;
+  const n = axes.length;
+  const rings = [0.25, 0.5, 0.75, 1];
+
+  rings.forEach(f=>{
+    const pts = axes.map((_,i)=> polarPoint(cx,cy,r*f, i*(360/n)));
+    svg.appendChild(svgEl('polygon', {
+      points: pts.map(p=>p.join(',')).join(' '),
+      fill:'none', stroke:'rgba(34,50,44,0.10)', 'stroke-width':'1'
+    }));
+  });
+  axes.forEach((_,i)=>{
+    const [x,y] = polarPoint(cx,cy,r,i*(360/n));
+    svg.appendChild(svgEl('line', { x1:cx,y1:cy,x2:x,y2:y, stroke:'rgba(34,50,44,0.10)', 'stroke-width':'1' }));
+  });
+
+  const dataPts = values.map((v,i)=> polarPoint(cx,cy,r*Math.min(v/100,1), i*(360/n)));
+  svg.appendChild(svgEl('polygon', {
+    points: dataPts.map(p=>p.join(',')).join(' '),
+    fill:'rgba(76,128,138,0.35)', stroke:'#3B4167', 'stroke-width':'2', 'stroke-linejoin':'round'
+  }));
+  dataPts.forEach(p=> svg.appendChild(svgEl('circle', { cx:p[0], cy:p[1], r:3, fill:'#3B4167' })) );
+
+  axes.forEach((label,i)=>{
+    const [x,y] = polarPoint(cx,cy,r+20,i*(360/n));
+    const anchor = x < cx-8 ? 'end' : (x > cx+8 ? 'start' : 'middle');
+    const t = svgEl('text', { x, y:y+3, 'text-anchor':anchor, class:'axis-label' });
+    t.textContent = label;
+    svg.appendChild(t);
+  });
+}
+
+// ---- Combo chart: bars (left axis) + line (right axis) over categories ----
+function renderCombo(svg, categories, barValues, lineValues, barColors, lineColor){
+  const barColorAt = i => Array.isArray(barColors) ? barColors[i % barColors.length] : barColors;
+  svg.innerHTML = '';
+  const x0=78, x1=604, y0=18, y1=178, h=y1-y0;
+  // round the bar scale up to a tidy number so the y-axis ticks read cleanly
+  const niceCeil = v => { const pw = Math.pow(10, Math.floor(Math.log10(v))); const m = v/pw;
+    return pw * ([1,1.2,1.5,2,2.5,3,4,5,6,8,10].find(k=>k>=m) || 10); };
+  const barMax = niceCeil((Math.max(...barValues) || 1)*1.05);
+  const lineMax = Math.max(...lineValues)*1.2 || 1;
+  const colW = (x1-x0)/categories.length;
+
+  [0,0.5,1].forEach(f=>{
+    const y = y1 - h*f;
+    svg.appendChild(svgEl('line', { x1:x0,y1:y,x2:x1,y2:y, stroke:'rgba(34,50,44,0.12)', 'stroke-width':'1' }));
+    const yt = svgEl('text', { x:x0-8, y:y+3, 'text-anchor':'end', class:'axis-label', style:'font-size:9px' });
+    yt.textContent = fmt(Math.round(barMax*f));
+    svg.appendChild(yt);
+  });
+  // y-axis unit
+  const unit = svgEl('text', { x:12, y:(y0+y1)/2, 'text-anchor':'middle', class:'axis-label', style:'font-size:11px', transform:`rotate(-90 12 ${(y0+y1)/2})` });
+  unit.textContent = 'MWK';
+  svg.appendChild(unit);
+
+  const barW = Math.min(42, colW*0.62);
+  categories.forEach((cat,i)=>{
+    const cx0 = x0 + colW*(i+0.5);
+    const bh = (barValues[i]/barMax)*h;
+    svg.appendChild(svgEl('rect', {
+      x:cx0-barW/2, y:y1-bh, width:barW, height:bh, rx:4, fill:barColorAt(i)
+    }));
+    // lift the value label clear of both the bar top and the line's dot so the line never crosses it
+    const dotY = y1 - (lineValues[i]/lineMax)*h;
+    const bt = svgEl('text', { x:cx0, y:Math.max(Math.min(y1-bh, dotY) - 15, 12), 'text-anchor':'middle', class:'value-label', style:'font-size:9px' });
+    bt.textContent = fmt(barValues[i]);
+    svg.appendChild(bt);
+    const t = svgEl('text', { x:cx0, y:y1+16, 'text-anchor':'middle', class:'axis-label' });
+    t.textContent = cat;
+    svg.appendChild(t);
+  });
+
+  const linePts = categories.map((_,i)=>{
+    const cx0 = x0 + colW*(i+0.5);
+    const ly = y1 - (lineValues[i]/lineMax)*h;
+    return [cx0, ly];
+  });
+  svg.appendChild(svgEl('polyline', {
+    points: linePts.map(p=>p.join(',')).join(' '),
+    fill:'none', stroke:lineColor, 'stroke-width':'2.5', 'stroke-linecap':'round', 'stroke-linejoin':'round'
+  }));
+  linePts.forEach((p,i)=>{
+    svg.appendChild(svgEl('circle', { cx:p[0], cy:p[1], r:4, fill:lineColor }));
+    // white label when it sits inside a dark bar, dark otherwise
+    const inside = (p[1]+16) - 4 > (y1 - (barValues[i]/barMax)*h);
+    const t = svgEl('text', { x:p[0], y:p[1]+16, 'text-anchor':'middle', class:'value-label', style: inside ? 'fill:#fff' : '' });
+    t.textContent = fmt(lineValues[i]);
+    svg.appendChild(t);
+  });
+}
+
+// ---- Grouped bar chart: 2 series across categories ----
+function renderGroupedBar(svg, categories, seriesA, seriesB, colorA, colorB){
+  svg.innerHTML = '';
+  const x0=10, x1=310, y0=14, y1=178, h=y1-y0;
+  const max = Math.max(...seriesA, ...seriesB)*1.15 || 1;
+  const colW = (x1-x0)/categories.length;
+  const barW = 26, gap = 6;
+
+  [0,0.5,1].forEach(f=>{
+    const y = y1 - h*f;
+    svg.appendChild(svgEl('line', { x1:x0,y1:y,x2:x1,y2:y, stroke:'rgba(34,50,44,0.12)', 'stroke-width':'1' }));
+  });
+
+  categories.forEach((cat,i)=>{
+    const ccx = x0 + colW*(i+0.5);
+    const ah = (seriesA[i]/max)*h, bh = (seriesB[i]/max)*h;
+    svg.appendChild(svgEl('rect', { x:ccx-barW-gap/2, y:y1-ah, width:barW, height:ah, rx:3, fill:colorA }));
+    svg.appendChild(svgEl('rect', { x:ccx+gap/2, y:y1-bh, width:barW, height:bh, rx:3, fill:colorB }));
+    const t = svgEl('text', { x:ccx, y:y1+16, 'text-anchor':'middle', class:'axis-label' });
+    t.textContent = cat;
+    svg.appendChild(t);
+  });
+}
+
+// ---- Horizontal bar chart ----
+function renderHBar(svg, labels, values, colors){
+  svg.innerHTML = '';
+  const x0=90, x1=300, y0=14, rowH=48;
+  const max = Math.max(...values)*1.1 || 1;
+  labels.forEach((label,i)=>{
+    const y = y0 + rowH*i;
+    const w = ((values[i]/max)*(x1-x0));
+    svg.appendChild(svgEl('text', { x:x0-8, y:y+16, 'text-anchor':'end', class:'axis-label' })).textContent = label;
+    svg.appendChild(svgEl('rect', { x:x0, y:y, width:(x1-x0), height:22, rx:5, fill:'rgba(34,50,44,0.10)' }));
+    svg.appendChild(svgEl('rect', { x:x0, y:y, width:w, height:22, rx:5, fill:svgPaint(svg, (Array.isArray(colors) ? colors[i % colors.length] : colors), 'bar'+i) }));
+    const t = svgEl('text', { x:x0+w+8, y:y+16, class:'value-label' });
+    t.textContent = fmt(values[i]);
+    svg.appendChild(t);
+  });
+}
+
+// ---- Vertical grouped bar with value labels above each bar (Age Group Distribution) ----
+function renderGroupedBarValues(svg, categories, seriesA, seriesB, colorA, colorB){
+  svg.innerHTML = '';
+  const x0=60, x1=840, y0=26, y1=210, h=y1-y0;
+  const max = Math.max(...seriesA, ...seriesB)*1.2 || 1;
+  const colW = (x1-x0)/categories.length;
+  const barW = Math.min(60, colW*0.26), gap = 14;
+
+  [0,0.5,1].forEach(f=>{
+    const y = y1 - h*f;
+    svg.appendChild(svgEl('line', { x1:x0,y1:y,x2:x1,y2:y, stroke:'rgba(34,50,44,0.12)', 'stroke-width':'1', 'stroke-dasharray': f===0 ? '' : '3 3' }));
+    const t = svgEl('text', { x:x0-10, y:y+4, 'text-anchor':'end', class:'axis-label-lg' });
+    t.textContent = fmt(Math.round(max*f));
+    svg.appendChild(t);
+  });
+
+  categories.forEach((cat,i)=>{
+    const ccx = x0 + colW*(i+0.5);
+    const ah = (seriesA[i]/max)*h, bh = (seriesB[i]/max)*h;
+    const ax = ccx-barW-gap/2, bx = ccx+gap/2;
+    svg.appendChild(svgEl('rect', { x:ax, y:y1-ah, width:barW, height:ah, rx:4, fill:colorA }));
+    svg.appendChild(svgEl('rect', { x:bx, y:y1-bh, width:barW, height:bh, rx:4, fill:colorB }));
+    const ta = svgEl('text', { x:ax+barW/2, y:y1-ah-10, 'text-anchor':'middle', class:'value-label-lg' });
+    ta.textContent = fmt(seriesA[i]);
+    svg.appendChild(ta);
+    const tb = svgEl('text', { x:bx+barW/2, y:y1-bh-10, 'text-anchor':'middle', class:'value-label-lg' });
+    tb.textContent = fmt(seriesB[i]);
+    svg.appendChild(tb);
+    const t = svgEl('text', { x:ccx, y:y1+28, 'text-anchor':'middle', class:'axis-label-lg' });
+    t.textContent = cat;
+    svg.appendChild(t);
+  });
+}
+
+// ---- Horizontal stacked bar (two series, with total at bar end) ----
+// rows: [{ label, a, b }] — if b is null/undefined the row renders as a single bar of value a.
+function renderHStackedBar(svg, rows, colorA, colorB, labelColX, joined){
+  svg.innerHTML = '';
+  const x0 = labelColX || 260, rowH = 50, y0 = 18, barH = 28;
+  const totals = rows.map(r=> r.a + (r.b||0));
+  const max = Math.max(...totals)*1.08 || 1;
+  const x1 = 1050;
+  const plotW = x1 - x0;
+
+  const niceMax = Math.ceil(max/200)*200;
+  for(let g=0; g<=niceMax; g+=200){
+    const gx = x0 + (g/niceMax)*plotW;
+    svg.appendChild(svgEl('line', { x1:gx,y1:y0-6,x2:gx,y2:y0+rowH*rows.length-16, stroke:'rgba(34,50,44,0.10)', 'stroke-width':'1' }));
+    const t = svgEl('text', { x:gx, y:y0+rowH*rows.length+2, 'text-anchor':'middle', class:'axis-label-lg' });
+    t.textContent = fmt(g);
+    svg.appendChild(t);
+  }
+
+  rows.forEach((row,i)=>{
+    const y = y0 + rowH*i;
+    svg.appendChild(svgEl('text', { x:x0-14, y:y+barH/2+5, 'text-anchor':'end', class:'axis-label-lg' })).textContent = row.label;
+
+    const aw = (row.a/niceMax)*plotW;
+    const r = 5, overlap = 0.5;   // 'joined' mode: one complete bar, no visible gap between the two segments
+    if(joined && row.b!=null){
+      // Female segment: rounded on the outer (left) end, flat on the seam side
+      const fw = aw, fr = Math.min(r, fw/2, barH/2);
+      svg.appendChild(svgEl('path', { fill:colorA,
+        d:`M${x0+fr},${y} H${x0+fw} V${y+barH} H${x0+fr} A${fr},${fr} 0 0 1 ${x0},${y+barH-fr} V${y+fr} A${fr},${fr} 0 0 1 ${x0+fr},${y} Z` }));
+    } else {
+      svg.appendChild(svgEl('rect', { x:x0, y, width:aw, height:barH, rx:5, fill:colorA }));
+    }
+    if(aw>44){
+      const ta = svgEl('text', { x:x0+aw/2, y:y+barH/2+5, 'text-anchor':'middle', class:'value-label-lg', style:'fill:#fff' });
+      ta.textContent = fmt(row.a);
+      svg.appendChild(ta);
+    }
+
+    let endX = x0+aw;
+    if(row.b!=null){
+      const bw = (row.b/niceMax)*plotW;
+      if(joined){
+        // Male segment: flat on the seam side, rounded on the outer (right) end
+        const mx = x0+aw-overlap, mw = bw+overlap, mr = Math.min(r, mw/2, barH/2);
+        svg.appendChild(svgEl('path', { fill:colorB,
+          d:`M${mx},${y} H${mx+mw-mr} A${mr},${mr} 0 0 1 ${mx+mw},${y+mr} V${y+barH-mr} A${mr},${mr} 0 0 1 ${mx+mw-mr},${y+barH} H${mx} Z` }));
+      } else {
+        svg.appendChild(svgEl('rect', { x:x0+aw, y, width:bw, height:barH, rx:5, fill:colorB }));
+      }
+      if(bw>44){
+        const tb = svgEl('text', { x:x0+aw+bw/2, y:y+barH/2+5, 'text-anchor':'middle', class:'value-label-lg', style:'fill:#fff' });
+        tb.textContent = fmt(row.b);
+        svg.appendChild(tb);
+      }
+      endX = x0+aw+bw;
+    }
+
+    const tt = svgEl('text', { x:endX+10, y:y+barH/2+5, class:'value-label-lg' });
+    tt.textContent = fmt(row.a + (row.b||0));
+    svg.appendChild(tt);
+  });
+}
+
+// ---- Horizontal bar, single series, alternating colors per row ----
+function renderHBarAlt(svg, labels, values, colorA, colorB){
+  svg.innerHTML = '';
+  const x0=280, x1=1050, y0=18, rowH=44, barH=28;
+  const max = Math.max(...values)*1.08 || 1;
+  const niceMax = Math.ceil(max/200)*200;
+
+  for(let g=0; g<=niceMax; g+=200){
+    const gx = x0 + (g/niceMax)*(x1-x0);
+    svg.appendChild(svgEl('line', { x1:gx,y1:y0-6,x2:gx,y2:y0+rowH*labels.length-14, stroke:'rgba(34,50,44,0.10)', 'stroke-width':'1' }));
+    const t = svgEl('text', { x:gx, y:y0+rowH*labels.length+2, 'text-anchor':'middle', class:'axis-label-lg' });
+    t.textContent = fmt(g);
+    svg.appendChild(t);
+  }
+
+  labels.forEach((label,i)=>{
+    const y = y0 + rowH*i;
+    const w = (values[i]/niceMax)*(x1-x0);
+    const color = i%2===0 ? colorA : colorB;
+    svg.appendChild(svgEl('text', { x:x0-14, y:y+barH/2+5, 'text-anchor':'end', class:'axis-label-lg' })).textContent = label;
+    svg.appendChild(svgEl('rect', { x:x0, y, width:w, height:barH, rx:5, fill:color }));
+    const t = svgEl('text', { x:x0+w-10, y:y+barH/2+5, 'text-anchor':'end', class:'value-label-lg', style:'fill:#fff' });
+    t.textContent = fmt(values[i]);
+    svg.appendChild(t);
+  });
+}
+
+/* ---------------------------------------------------------------
+   2c. OUTPUT — supplemental static charts (fixed programme figures,
+   not tied to the year/region filters)
+------------------------------------------------------------------*/
+function initSupplementalCharts(){
+  const FEMALE = '#3C4268', MALE = '#4C808B';
+
+  // Age Group Distribution
+  const ageCats = ['18-35','15-24','18-40','35+'];
+  const ageFemale = [1081,419,61,45];
+  const ageMale   = [1569,353,130,41];
+  renderGroupedBarValues(document.getElementById('chartAgeGroup'), ageCats, ageFemale, ageMale, FEMALE, MALE);
+  buildLegend(document.getElementById('legendAgeGroup'), ['Female','Male'], [FEMALE, MALE],
+    [ageFemale.reduce((a,b)=>a+b,0), ageMale.reduce((a,b)=>a+b,0)]);
+
+  // Business Sectors by Participant Count
+  const sectorRows = [
+    { label:'Agriculture', a:348, b:491 },
+    { label:'Food Security & Agri-Climate', a:333, b:365 },
+    { label:'Fashion Design & Textile', a:39, b:113 },
+    { label:'Renewable Energy', a:43, b:81 },
+    { label:'Technology', a:93, b:24 },
+    { label:'Manufacturing', a:32, b:76 },
+  ];
+  renderHStackedBar(document.getElementById('chartSectors'), sectorRows, FEMALE, MALE, 280, true);
+  buildLegend(document.getElementById('legendSectors'), ['Female','Male'], [FEMALE, MALE],
+    [sectorRows.reduce((s,r)=>s+r.a,0), sectorRows.reduce((s,r)=>s+r.b,0)]);
+
+  // Emerge4Biz Project Components by Participants
+  const componentRows = [
+    { label:'Incubation', a:1139, b:1477 },
+    { label:'Acceleration', a:373, b:458 },
+    { label:'Capital Facilitation', a:147, b:null },
+    { label:'Trainings & Workshops', a:105, b:null },
+  ];
+  renderHStackedBar(document.getElementById('chartComponents'), componentRows, FEMALE, MALE, 230, true);
+  buildLegend(document.getElementById('legendComponents'), ['Female','Male'], [FEMALE, MALE],
+    [componentRows[0].a+componentRows[1].a, componentRows[0].b+componentRows[1].b]);
+
+  const miniStats = [
+    { val:'70.72%', label:'Incubation' },
+    { val:'22.47%', label:'Acceleration' },
+    { val:'3.97%',  label:'Capital & Investment' },
+    { val:'2.84%',  label:'Training & Workshop' },
+  ];
+  const miniWrap = document.getElementById('miniStatsComponents');
+  miniWrap.innerHTML = miniStats.map(s=>`
+    <div class="mini-stat">
+      <div class="mini-stat-val">${s.val}</div>
+      <div class="mini-stat-label">${s.label}</div>
+    </div>`).join('');
+
+  // Projects Implemented by Reach
+  const projectLabels = ['Zantchito Incubation','ESEA Acceleration','GJ4A&Y','Bizcubation','Hatchstart Incubation','ASELD Acceleration','Muzi Ecosystem-Kukolola','TEVET Pilot Bizcubation'];
+  const projectValues = [754,573,511,328,281,256,106,49];
+  renderHBarAlt(document.getElementById('chartProjectsReach'), projectLabels, projectValues, MALE, FEMALE);
+}
+
+// ---- Results-chain funnel: Output count carried through Outcome % conversions ----
+// stages: [{ label, value, sub }] where value is either the raw Output count (stage 0)
+// or an implied enterprise count derived from an Outcome percentage (stage 1+).
+function renderResultsChain(svg, stages){
+  svg.innerHTML = '';
+  const x0=20, x1=300, top=14, rowH=52, barH=34;
+  const maxVal = stages[0].value || 1;
+  stages.forEach((stage, i)=>{
+    const y = top + rowH*i;
+    const frac = Math.max(stage.value/maxVal, 0.08);
+    const w = (x1-x0)*frac;
+    const cx = x0 + (x1-x0)/2;
+    svg.appendChild(svgEl('rect', {
+      x:cx-w/2, y, width:w, height:barH, rx:8,
+      fill:svgPaint(svg, i===0 ? '#4C808A' : (i===1 ? '#3B4167' : GRAD_CSS), 'stage'+i),
+      opacity:'1'
+    }));
+    const vt = svgEl('text', { x:cx, y:y+barH/2+4, 'text-anchor':'middle', class:'value-label', style:'font-size:12px;fill:#fff' });
+    vt.textContent = fmt(stage.value);
+    svg.appendChild(vt);
+    const lt = svgEl('text', { x:cx, y:y+barH+13, 'text-anchor':'middle', class:'axis-label' });
+    lt.textContent = stage.label;
+    svg.appendChild(lt);
+
+    if(i < stages.length-1){
+      const pct = stages[0].value>0 ? Math.round((stages[i+1].value/stage.value)*100) : 0;
+      const insideBar = (cx + w/2) > x1 - 40;   // percentage label sits on the bar (white) or beside it (dark)
+      const at = svgEl('text', { x:x1-6, y:y+barH/2+4, 'text-anchor':'end', class:'value-label', style: insideBar ? 'fill:#fff' : '' });
+      at.textContent = pct+'%';
+      svg.appendChild(at);
+    }
+  });
+}
+
+// ---- Multi-line trend chart, values 0-100 ----
+function renderLineChart(svg, categories, series, colors){
+  svg.innerHTML = '';
+  const x0=30, x1=304, y0=16, y1=178, h=y1-y0;
+  const colW = (x1-x0)/(categories.length-1 || 1);
+
+  [0,0.25,0.5,0.75,1].forEach(f=>{
+    const y = y1 - h*f;
+    svg.appendChild(svgEl('line', { x1:x0,y1:y,x2:x1,y2:y, stroke:'rgba(34,50,44,0.12)', 'stroke-width':'1' }));
+    const t = svgEl('text', { x:x0-6, y:y+3, 'text-anchor':'end', class:'axis-label', style:'font-size:9px' });
+    t.textContent = (f*100)+'%';
+    svg.appendChild(t);
+  });
+  categories.forEach((cat,i)=>{
+    const t = svgEl('text', { x:x0+colW*i, y:y1+16, 'text-anchor':'middle', class:'axis-label' });
+    t.textContent = cat;
+    svg.appendChild(t);
+  });
+
+  series.forEach((values, si)=>{
+    const pts = values.map((v,i)=> [x0+colW*i, y1-(v/100)*h]);
+    svg.appendChild(svgEl('polyline', {
+      points: pts.map(p=>p.join(',')).join(' '),
+      fill:'none', stroke:svgPaint(svg, colors[si], 'line'+si, [x0,x1]), 'stroke-width':'2.5', 'stroke-linecap':'round', 'stroke-linejoin':'round'
+    }));
+    pts.forEach(p=> svg.appendChild(svgEl('circle', { cx:p[0], cy:p[1], r:3.5, fill:svgPaint(svg, colors[si], 'line'+si, [x0,x1]) })) );
+  });
+}
+
+// ---- Regional scorecard: heatmap-tinted table cells ----
+function colorForFraction(f){
+  return '#3B4167';
+}
+function buildScorecard(yearFilter){
+  const cols = [
+    { key:'financed', label:'businesses', source:'output' },
+    { key:'grant',     label:'disbursed',  source:'output', currency:true },
+    { key:'jobsCreated', label:'jobs', source:'outcome' },
+    { key:'enterprisesOperating', label:'still operating', source:'outcome', percent:true },
+  ];
+  const rows = REGIONS.map(r=>{
+    const out = aggregate(yearFilter, r);
+    const oc = aggregateOutcome(yearFilter, r);
+    return { region:r, output:out, outcome:oc };
+  });
+  const colMax = cols.map(c=> Math.max(...rows.map(row => (c.source==='output'?row.output:row.outcome)[c.key])) || 1);
+
+  const tbody = document.getElementById('scorecardBody');
+  tbody.innerHTML = '';
+  rows.forEach(row=>{
+    const tr = document.createElement('tr');
+    let html = `<td class="region-name">${row.region}</td>`;
+    cols.forEach((c,ci)=>{
+      const val = (c.source==='output'?row.output:row.outcome)[c.key];
+      const frac = val / colMax[ci];
+      const display = c.currency ? fmtCurrency(val) : (c.percent ? val+'%' : fmt(val));
+      html += `<td class="score-cell" style="background:${colorForFraction(frac)}">
+        <div class="score-val">${display}</div>
+        <div class="score-label">${c.label}</div>
+      </td>`;
+    });
+    tr.innerHTML = html;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateTrendCharts(outputData, outcomeData, yearFilter, regionFilter){
+  // Results chain — Financed, implied still-operating, implied revenue-growing
+  const financed = outputData.financed;
+  const stillOperating = Math.round(financed * (outcomeData.enterprisesOperating/100));
+  const growingRevenue = Math.round(stillOperating * (outcomeData.revenueIncrease/100));
+  renderResultsChain(document.getElementById('chartResultsChain'), [
+    { label:'Businesses Financed', value:financed },
+    { label:'Still Operating', value:stillOperating },
+    { label:'Reporting Revenue Growth', value:growingRevenue },
+  ]);
+  buildLegend(document.getElementById('legendResultsChain'),
+    ['Financed (Output)','Still Operating (Outcome)','Revenue Growth (Outcome)'],
+    ['#4C808A','#3B4167',GRAD_CSS], [financed, stillOperating, growingRevenue]);
+
+  // Outcome quality trend — always all 3 years, scoped by Region filter
+  const trendMetrics = [
+    { key:'enterprisesOperating', label:'Still Operating', color:'#3B4167' },
+    { key:'revenueIncrease', label:'Revenue Increase', color:GRAD_CSS },
+    { key:'financialMgmtAdoption', label:'Fin. Mgmt. Adoption', color:'#55A0A8' },
+  ];
+  const trendSeries = trendMetrics.map(m => YEARS.map(y => aggregateOutcome(y, regionFilter)[m.key]));
+  renderLineChart(document.getElementById('chartOutcomeTrend'), YEARS, trendSeries, trendMetrics.map(m=>m.color));
+  buildLegend(document.getElementById('legendOutcomeTrend'), trendMetrics.map(m=>m.label), trendMetrics.map(m=>m.color),
+    trendMetrics.map((m,i)=> trendSeries[i][trendSeries[i].length-1]));
+
+  // Radar — six Outcome percent signals for the current filter
+  const axes = ['Still Operating','Fin. Mgmt.','Revenue','Green Adapt.','Product Div.','Digital Mktg.'];
+  const radarVals = [
+    outcomeData.enterprisesOperating, outcomeData.financialMgmtAdoption, outcomeData.revenueIncrease,
+    outcomeData.greenAdaptation, outcomeData.productDiversification, outcomeData.digitalMarketingAdoption
+  ];
+  renderRadar(document.getElementById('chartRadar'), axes, radarVals);
+  buildLegend(document.getElementById('legendRadar'), axes, axes.map(()=> '#3B4167'), radarVals);
+
+  // Combo — grant disbursed (bars) vs businesses financed (line), always all 3 years, scoped by Region filter
+  const grantByYear = YEARS.map(y => aggregate(y, regionFilter).grant);
+  const financedByYear = YEARS.map(y => aggregate(y, regionFilter).financed);
+  renderCombo(document.getElementById('chartTrajectory'), YEARS, grantByYear, financedByYear, ['#3B4167','#4C808A'], '#D9A441');
+  buildLegend(document.getElementById('legendTrajectory'), ['Grant Disbursed (MWK)','Businesses Financed'], ['linear-gradient(90deg,#3B4167 50%,#4C808A 50%)','#D9A441'],
+    [grantByYear.reduce((a,b)=>a+b,0), financedByYear.reduce((a,b)=>a+b,0)]);
+
+  // Grouped bar — Women vs Youth, current filter
+  const catsWY = ['Engaged','Trained','Mentored & Coached'];
+  const women = [outputData.womenEngaged, outputData.womenTrained, outputData.womenMentored];
+  const youth = [outputData.youthEngaged, outputData.youthTrained, outputData.youthMentored];
+  renderGroupedBar(document.getElementById('chartGrouped'), catsWY, women, youth, '#3B4167', '#4C808A');
+  buildLegend(document.getElementById('legendGrouped'), ['Women','Youth'], ['#3B4167','#4C808A'],
+    [women.reduce((a,b)=>a+b,0), youth.reduce((a,b)=>a+b,0)]);
+
+  // Horizontal bar — Job Creation by region, scoped by Year filter, always all 3 regions
+  const jobsByRegion = REGIONS.map(r => aggregateOutcome(yearFilter, r).jobsCreated);
+  const regionColors = ['#3B4167','#4C808A',GRAD_CSS];   // Central, Northern, Southern (gradient)
+  renderHBar(document.getElementById('chartRegional'), REGIONS, jobsByRegion, regionColors);
+  buildLegend(document.getElementById('legendRegional'), REGIONS, regionColors, jobsByRegion);
+}
+
+/* ---------------------------------------------------------------
+   3. FILTER + LENS WIRING
+------------------------------------------------------------------*/
+let currentLens = 'enterprise';
+
+function refresh(){
+  const yearFilter = document.getElementById('yearSelect').value;
+  const regionFilter = document.getElementById('regionSelect').value;
+  const data = aggregate(yearFilter, regionFilter);
+  const prev = prevYearAggregate(yearFilter, regionFilter);
+
+  updateCards(data, prev, yearFilter);
+  drawRings(data);
+  updateStageLegend(data);
+  updateCharts(data);
+
+  const outcomeData = aggregateOutcome(yearFilter, regionFilter);
+  const outcomePrev = prevOutcomeAggregate(yearFilter, regionFilter);
+  updateOutcomeCards(outcomeData, outcomePrev);
+
+  updateTrendCharts(data, outcomeData, yearFilter, regionFilter);
+  buildScorecard(yearFilter);
+
+}
+
+document.getElementById('yearSelect').addEventListener('change', refresh);
+document.getElementById('regionSelect').addEventListener('change', refresh);
+
+function applyLens(){
+  document.querySelectorAll('#grid-output .kpi-card').forEach(card=>{
+    card.classList.remove('dimmed');
+    if(currentLens==='all' || card.dataset.theme===currentLens){
+      card.classList.remove('hidden-lens');
+    } else {
+      card.classList.add('hidden-lens');
+    }
+  });
+}
+
+document.getElementById('lensRow').addEventListener('click', e=>{
+  const btn = e.target.closest('.lens-btn');
+  if(!btn || btn.disabled) return;
+  document.querySelectorAll('.lens-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentLens = btn.dataset.lens;
+  applyLens();
+});
+
+/* ---------------------------------------------------------------
+   4. INIT
+------------------------------------------------------------------*/
+buildCards();
+applyLens();
+buildOutcomeCards();
+initSupplementalCharts();
+refresh();
+</script>
+</body>
+</html>

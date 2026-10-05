@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Emerge Learn Impact Dashboard</title>
+<style>
+/* ── RESET & BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --teal-deep:   #1A3C40;
+  --teal:        #4C808A;
+  --card-border: #4C808A;
+  --teal-mid:    #3A6B74;
+  --teal-light:  #7FB5BE;
+  --teal-pale:   #E8F3F5;
+  --navy:        #1E2A4A;
+  --navy-mid:    #3B4167;
+  --gold:        #E8A838;
+  --gold-pale:   #FEF5E0;
+  --green:       #3DAE7A;
+  --green-pale:  #E4F5EE;
+  --coral:       #E8604C;
+  --purple:      #7A5CCC;
+  --bg:          #F2F6F7;
+  --surface:     #FFFFFF;
+  --border:      #D6E4E7;
+  --text-1:      #0F2427;
+  --text-2:      #3A5A60;
+  --text-3:      #7A9EA5;
+  --sidebar-w:   220px;
+  --topband-h:   96px;
+  --filterband-h: 90px;
+  --header-h:    calc(var(--topband-h) + var(--filterband-h));
+  --radius:      3px;
+  --shadow:      0 1px 6px rgba(26,60,64,0.10);
+}
+
+html, body { height: 100%; font-family: Verdana, Geneva, sans-serif; background: var(--bg); color: var(--text-1); font-size: 13px; }
+
+/* ── LAYOUT SHELL ── */
+.shell { display: grid; grid-template-columns: var(--sidebar-w) 1fr; grid-template-rows: var(--topband-h) var(--filterband-h) 1fr; min-height: 100vh; }
+
+/* ── HEADER (layout, logo position, colour and filter styling adopted from the Org Dashboard) ── */
+.hero-topband {
+  grid-column: 1 / -1;
+  position: sticky; top: 0; z-index: 101;
+  display: flex; align-items: center; justify-content: center;
+  padding: 14px 24px; min-height: var(--topband-h);
+  background: linear-gradient(120deg, var(--teal) 0%, var(--teal-deep) 100%);
+  box-shadow: 0 18px 24px -18px rgba(26,60,64,0.35);
+}
+.hero-logo-box {
+  position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
+  background: #fff; border-radius: 3px; width: 150px; height: 72px;
+  padding: 6px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,.18);
+}
+.hero-logo-box img { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+.hero-title-wrap { text-align: center; }
+.hero-title {
+  margin: 0; color: #fff; font-family: Verdana, Geneva, sans-serif; font-weight: 700;
+  line-height: 1.15; font-size: clamp(17px, 2.1vw, 24px); letter-spacing: -.01em;
+}
+.hero-subtitle { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 3px; }
+.header-meta { position: absolute; right: 24px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 8px; }
+.meta-pill {
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 3px; padding: 3px 10px; font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 500;
+}
+.live-dot { display: inline-flex; align-items: center; gap: 5px; }
+.live-dot::before { content:''; width:6px; height:6px; border-radius:50%; background: var(--green); box-shadow: 0 0 0 3px rgba(61,174,122,0.25); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{ box-shadow:0 0 0 3px rgba(61,174,122,0.25); } 50%{ box-shadow:0 0 0 6px rgba(61,174,122,0.08); } }
+
+.hero-filterband {
+  grid-column: 1 / -1;
+  position: sticky; top: var(--topband-h); z-index: 100;
+  background: var(--surface); padding: 12px 24px;
+  box-shadow: 0 18px 24px -18px rgba(26,60,64,.22);
+  font-family: Verdana, Geneva, sans-serif;
+}
+.hero-filterband .filterbar { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; width: 100%; margin-top: 0px; }
+.hero-filterband .filter-group { flex: 1 1 0; min-width: 130px; display: flex; flex-direction: column; gap: 5px; }
+.hero-filterband label {
+  color: var(--text-1); font-weight: 600; font-size: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+}
+.hero-filterband .filter-icon { color: var(--teal); width: 17px; height: 13px; flex: none; }
+.fsel {
+  width: 100%; min-width: 0; background-color: var(--teal); color: #fff;
+  border: 1px solid var(--teal-deep); border-radius: 3px; padding: 8px 28px 8px 10px;
+  font: 600 12px Verdana, Geneva, sans-serif; cursor: pointer; appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 8l8 10 8-10z' fill='%23ffffff'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 8px center; background-size: 13px 13px;
+}
+.fsel:hover { border-color: var(--surface); }
+.fsel:focus { outline: 2px solid var(--teal-light); outline-offset: 2px; }
+
+@media (max-width: 820px) {
+  .hero-filterband { position: static; padding: 10px 12px; }
+  .hero-filterband .filterbar { gap: 10px; }
+  .hero-filterband .filter-group { flex: 1 1 calc(50% - 10px); }
+  .hero-filterband label { font-size: 11px; }
+  .fsel { font-size: 11px; padding: 7px 24px 7px 8px; }
+}
+@media (max-width: 720px) {
+  .hero-topband { justify-content: flex-start; gap: 12px; padding: 8px 12px; min-height: 0; }
+  .hero-logo-box { position: static; transform: none; width: 84px; height: 46px; flex: none; }
+  .hero-title-wrap { text-align: left; }
+  .header-meta { display: none; }
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: #4C808A; padding: 24px 0;
+  display: flex; flex-direction: column; gap: 4px;
+  overflow-y: auto; position: sticky; top: var(--header-h); height: calc(100vh - var(--header-h));
+}
+.sidebar-section-label {
+  font-size: 9px; font-weight: 600; color: #fff;
+  letter-spacing: 0.8px; padding: 12px 18px 4px; text-transform: uppercase;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 18px; cursor: pointer; text-decoration: none;
+  color: #fff; font-size: 12px; font-weight: 500;
+  border-left: 3px solid transparent; transition: all 0.15s;
+}
+.nav-item:hover { color: #fff; background: rgba(255,255,255,0.06); border-left-color: var(--teal-light); }
+.nav-item.active { color: #fff; background: rgba(255,255,255,0.10); }
+.nav-icon { width: 18px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+.nav-icon svg { width: 17px; height: 17px; display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav-badge { margin-left: auto; background: rgba(232,168,56,0.25); color: var(--gold); border-radius: 3px; padding: 1px 7px; font-size: 10px; font-weight: 600; }
+.sidebar-footer { margin-top: auto; padding: 16px 18px; border-top: 1px solid rgba(255,255,255,0.08); }
+.sidebar-footer p { font-size: 10px; color: #fff; }
+.sidebar-footer strong { color: #fff; }
+
+/* ── MAIN CONTENT ── */
+.main { overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+
+/* ── HERO STAT ROW ── */
+.hero-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.hero-card {
+  background: var(--surface); border-radius: 3px;
+  border: 1px solid var(--border); padding: 18px 18px 14px;
+  position: relative; overflow: hidden;
+}
+.hero-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  border-radius: 0 0 3px 3px;
+}
+.hero-card.c-teal::after    { background: var(--teal); }
+.hero-card.c-gold::after    { background: var(--gold); }
+.hero-card.c-green::after   { background: var(--green); }
+.hero-card.c-purple::after  { background: var(--purple); }
+.hero-card .emoji { font-size: 22px; margin-bottom: 10px; display: block; }
+.hero-val { font-family: Verdana, Geneva, sans-serif; font-size: 30px; font-weight: 700; line-height: 1; color: var(--text-1); }
+.hero-val.counting { animation: countup 1.2s ease-out forwards; }
+.hero-label { font-size: 12px; color: var(--text-2); margin-top: 6px; line-height: 1.4; }
+.hero-delta { font-size: 10px; color: var(--green); font-weight: 600; margin-top: 6px; }
+.hero-delta.neg { color: var(--coral); }
+
+/* ── SECTION HEADER ── */
+.section-hdr { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; margin-bottom: 20px; }
+.section-hdr h2 { font-family: Verdana, Geneva, sans-serif; font-size: 19px; font-weight: 600; color: var(--text-1); display: flex; align-items: center; gap: 14px; width: 100%; margin: 0; }
+.section-hdr h2::before, .section-hdr h2::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.section-hdr p { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.section-tag { border-radius: 3px; padding: 3px 10px; font-size: 10px; font-weight: 600; }
+.tag-output  { background: var(--teal-pale); color: var(--teal-mid); }
+.tag-outcome { background: var(--gold-pale); color: #8A5C00; }
+
+/* ── HERO NAV BUTTONS ── */
+.hero-nav-buttons { display: flex; justify-content: center; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+.hero-nav-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--teal); color: #fff; text-decoration: none;
+  font-family: Verdana, Geneva, sans-serif; font-size: 12px; font-weight: 600;
+  padding: 10px 22px; border-radius: 3px; border: 1px solid var(--teal-deep);
+  box-shadow: var(--shadow); transition: background 0.15s ease, transform 0.15s ease;
+  cursor: pointer; outline: none;
+}
+.hero-nav-btn:hover { background: var(--teal-deep); transform: translateY(-1px); }
+.hero-nav-btn.active { background: var(--navy); border-color: var(--navy); }
+.hero-nav-btn.active:hover { background: var(--navy); transform: none; }
+
+/* ── OUTPUT BLOCK SHOW/HIDE (lens-style toggle) ── */
+.output-grid.single-block { grid-template-columns: 1fr; }
+.output-block.hidden-block { display: none; }
+
+/* ── OUTPUT TABLE-GRID ── */
+.output-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.output-block { background: var(--surface); border-radius: 3px; border: 1px solid var(--border); overflow: hidden; }
+.block-header { padding: 12px 16px; background: #3B4167; text-align: center; }
+.block-header h3 { font-family: Verdana, Geneva, sans-serif; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.9); letter-spacing: 0.2px; }
+
+.kpi-list { padding: 0; }
+.kpi-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.kpi-row:last-child { border-bottom: none; }
+.kpi-row:hover { background: var(--teal-pale); }
+.kpi-indicator { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.kpi-name { flex: 1; font-size: 12px; color: var(--text-2); line-height: 1.3; }
+.kpi-num {
+  font-family: Verdana, Geneva, sans-serif; font-size: 16px; font-weight: 700;
+  color: var(--text-1); flex-shrink: 0; min-width: 52px; text-align: right;
+}
+.kpi-bar-wrap { width: 80px; flex-shrink: 0; }
+.kpi-bar-track { height: 5px; background: #E8EFF0; border-radius: 3px; overflow: hidden; }
+.kpi-bar-fill  { height: 100%; border-radius: 3px; }
+
+/* ── KPI CARD GRID (tile-style KPI cards, same idiom as hero-card) ── */
+.kpi-card-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px; padding: 16px;
+}
+.kpi-card {
+  background: var(--surface); border-radius: 3px;
+  border: 1px solid var(--border); padding: 14px 14px 12px;
+  position: relative; overflow: hidden;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.kpi-card:hover { transform: translateY(-2px); border-color: var(--teal-light); }
+.kpi-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  border-radius: 0 0 3px 3px;
+}
+.kpi-card.c-teal::after      { background: var(--teal); }
+.kpi-card.c-teal-mid::after  { background: var(--teal-mid); }
+.kpi-card.c-green::after     { background: var(--green); }
+.kpi-card.c-purple::after    { background: var(--purple); }
+.kpi-card.c-gold::after      { background: var(--gold); }
+.kpi-card.c-coral::after     { background: var(--coral); }
+.kpi-card.c-navy-mid::after  { background: var(--navy-mid); }
+.kpi-card .kpi-icon { margin-bottom: 8px; display: block; }
+.kpi-card .kpi-icon svg { display: block; width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.kpi-card-val { font-family: Verdana, Geneva, sans-serif; font-size: 22px; font-weight: 700; line-height: 1; color: var(--text-1); }
+.kpi-card-label { font-size: 11px; color: var(--text-2); margin-top: 6px; line-height: 1.35; }
+
+/* ── KPI CARDS — Youth Training & Leadership (style adopted from Org Dashboard index.html kpi-card) ── */
+.kpi-card-grid.grid-4 { grid-template-columns: repeat(4, 1fr); }
+.kpi-card.idx-card {
+  border-radius: 3px;
+  padding: 16px 18px;
+  text-align: center;
+}
+.kpi-card.idx-card::after { content: none; }
+.kpi-card.idx-card:hover { transform: translateY(-2px); }
+.kpi-card.idx-card .kpi-icon { text-align: center; margin: 0 0 8px; }
+.kpi-card.idx-card .kpi-icon svg { margin: 0 auto; }
+.kpi-card.idx-card .kpi-card-val {
+  font-family: Verdana, Geneva, sans-serif; font-size: 20px; font-weight: 600;
+  letter-spacing: -0.01em; text-align: center; line-height: 1;
+}
+.kpi-card.idx-card .kpi-card-label { font-size: 12px; margin-top: 10px; text-align: center; }
+.kpi-card.idx-card.c-teal,
+.kpi-card.idx-card.c-teal-mid,
+.kpi-card.idx-card.c-teal-light,
+.kpi-card.idx-card.c-navy-mid,
+.kpi-card.idx-card.c-navy,
+.kpi-card.idx-card.c-gold,
+.kpi-card.idx-card.c-green,
+.kpi-card.idx-card.c-purple,
+.kpi-card.idx-card.c-coral       { border-color: var(--teal); }
+.kpi-card.idx-card.c-teal .kpi-card-val,
+.kpi-card.idx-card.c-teal-mid .kpi-card-val,
+.kpi-card.idx-card.c-teal-light .kpi-card-val,
+.kpi-card.idx-card.c-navy-mid .kpi-card-val,
+.kpi-card.idx-card.c-navy .kpi-card-val,
+.kpi-card.idx-card.c-gold .kpi-card-val,
+.kpi-card.idx-card.c-green .kpi-card-val,
+.kpi-card.idx-card.c-purple .kpi-card-val,
+.kpi-card.idx-card.c-coral .kpi-card-val       { color: var(--teal); }
+.kpi-card.idx-card.c-teal        .kpi-icon,
+.kpi-card.idx-card.c-teal-mid    .kpi-icon,
+.kpi-card.idx-card.c-teal-light  .kpi-icon,
+.kpi-card.idx-card.c-navy-mid    .kpi-icon,
+.kpi-card.idx-card.c-navy        .kpi-icon,
+.kpi-card.idx-card.c-gold        .kpi-icon,
+.kpi-card.idx-card.c-green       .kpi-icon,
+.kpi-card.idx-card.c-purple      .kpi-icon,
+.kpi-card.idx-card.c-coral       .kpi-icon { color: var(--teal); }
+@media (max-width: 900px) {
+  .kpi-card-grid.grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .kpi-card-grid.grid-4 { grid-template-columns: 1fr; }
+}
+
+/* ── VISUAL ROW ── */
+.vis-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.vis-card { background: var(--surface); border-radius: 3px; border: 1px solid var(--border); padding: 16px; }
+.chart-card-style {
+  background-color: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: 3px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  height: 380px;
+}
+.vis-title { font-family: Verdana, Geneva, sans-serif; font-size: 15px; font-weight: 700; color: var(--text-1); margin-bottom: 14px; text-align: center; }
+
+/* Bar chart */
+.bar-chart { display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: center; }
+.bc-row { display: flex; align-items: center; gap: 8px; }
+.bc-label { width: 120px; font-size: 11px; color: var(--text-2); text-align: right; flex-shrink: 0; line-height: 1.25; }
+.bc-track { flex: 1; height: 18px; background: #EEF4F5; border-radius: 3px; overflow: hidden; position: relative; }
+.bc-fill { height: 100%; border-radius: 3px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; transition: width 0.8s ease; }
+.bc-fill span { font-size: 10px; font-weight: 600; color: #fff; }
+.bc-total { width: 38px; font-size: 11px; font-weight: 600; color: var(--text-1); flex-shrink: 0; text-align: right; }
+
+/* Donut */
+.donut-wrap { display: flex; align-items: center; gap: 16px; flex: 1; justify-content: center; }
+.donut-legend { display: flex; flex-direction: column; gap: 7px; }
+.dl-row { display: flex; align-items: center; gap: 7px; }
+.dl-dot { width: 8px; height: 8px; border-radius: 3px; flex-shrink: 0; }
+.dl-label { font-size: 11px; color: var(--text-2); flex: 1; }
+.dl-val { font-size: 12px; font-weight: 600; color: var(--text-1); font-family: Verdana, Geneva, sans-serif; }
+
+/* ── OUTCOME SECTION ── */
+.outcome-section { background: transparent; }
+.outcome-header { background: #3B4167; padding: 14px 20px; display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 3px 3px 0 0; }
+.outcome-header h2 { font-family: Verdana, Geneva, sans-serif; font-size: 14px; font-weight: 600; color: #fff; }
+.outcome-header p { font-size: 11px; color: rgba(255,255,255,0.5); }
+
+.outcome-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 3px 3px; }
+.outcome-card { background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 20px 16px; text-align: center; transition: transform .15s ease, border-color .15s ease; }
+.outcome-card:hover { transform: translateY(-2px); border-color: var(--teal-light); }
+
+.radial-wrap { position: relative; width: 80px; height: 80px; margin: 0 auto 12px; }
+.radial-wrap svg { transform: rotate(-90deg); }
+.radial-bg { fill: none; stroke: #E8EFF0; stroke-width: 8; }
+.radial-val { fill: none; stroke-width: 8; stroke-linecap: round; }
+.radial-label {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.radial-pct { font-family: Verdana, Geneva, sans-serif; font-size: 16px; font-weight: 700; color: var(--text-1); line-height: 1; }
+.radial-sub  { font-size: 9px; color: var(--text-3); margin-top: 1px; }
+.outcome-name { font-size: 11px; color: var(--text-2); line-height: 1.4; }
+
+/* ── SECOND VIS ROW ── */
+.vis-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Stacked bar */
+.stacked-chart { display: flex; flex-direction: column; gap: 7px; flex: 1; justify-content: center; }
+.sc-row { display: flex; align-items: center; gap: 8px; }
+.sc-label { width: 36px; font-size: 10px; color: var(--text-3); text-align: right; flex-shrink: 0; }
+.sc-bars { display: flex; flex: 1; height: 20px; border-radius: 3px; overflow: hidden; gap: 1px; }
+.sc-seg { height: 100%; display: flex; align-items: center; justify-content: center; }
+.sc-seg span { font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.9); }
+.sc-total { width: 36px; font-size: 10px; font-weight: 600; color: var(--text-1); }
+
+/* Legend strip */
+.legend-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.ls-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-2); }
+.ls-dot { width: 8px; height: 8px; border-radius: 3px; }
+
+/* Hub grid */
+.hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.hub-tile { background: var(--teal-pale); border: 1px solid var(--border); border-radius: 3px; padding: 8px 10px; }
+.hub-tile .hub-name { font-size: 11px; font-weight: 600; color: var(--teal-mid); }
+.hub-tile .hub-status { font-size: 10px; color: var(--text-3); margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+.hub-status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+.hub-status-dot.inactive { background: var(--coral); }
+
+/* Mini stat list */
+.mini-stat-list { display: flex; flex-direction: column; gap: 5px; }
+.ms-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: var(--bg); border-radius: 3px; }
+.ms-label { font-size: 11px; color: var(--text-2); }
+.ms-val { font-family: Verdana, Geneva, sans-serif; font-size: 13px; font-weight: 700; color: var(--text-1); }
+.ms-sub { font-size: 9px; color: var(--text-3); }
+
+/* ── FOOTER ── */
+
+/* Responsive tweaks */
+@media (max-width: 1000px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .hero-row { grid-template-columns: 1fr 1fr; }
+  .output-grid { grid-template-columns: 1fr; }
+  .vis-row, .vis-row-2 { grid-template-columns: 1fr; }
+  .outcome-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* Scroll-reveal animation */
+.reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.4s ease, transform 0.4s ease; }
+.reveal.visible { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- HEADER -->
+<header class="hero-topband">
+  <div class="hero-logo-box"><img src="data:image/png;base64,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" alt="Emerge Learn"></div>
+  <div class="hero-title-wrap">
+    <h1 class="hero-title">Emerge Learn — Impact Dashboard</h1>
+  </div>
+</header>
+<div class="hero-filterband" role="group" aria-label="Dashboard filters">
+  <div class="filterbar">
+    <div class="filter-group">
+      <label for="fYear">View by<svg class="filter-icon" viewBox="0 0 64 48" aria-hidden="true"><path d="M4 3h24c2.2 0 3.4 2.5 2 4.3L20 20v18c0 2.2-1.8 4-4 4h-2c-2.2 0-4-1.8-4-4V20L1.9 7.3C.5 5.5 1.8 3 4 3z" fill="currentColor"/><rect x="34" y="1" width="14" height="6" rx="3" fill="currentColor"/><rect x="34" y="12" width="18" height="6" rx="3" fill="currentColor"/><rect x="34" y="23" width="22" height="6" rx="3" fill="currentColor"/><rect x="34" y="34" width="26" height="6" rx="3" fill="currentColor"/></svg></label>
+      <select id="fYear" class="fsel"><option>All Years</option><option>2021</option><option>2022</option><option>2023</option><option>2024</option><option>2025</option><option>2026</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="fDistrict">District<svg class="filter-icon" viewBox="0 0 64 48" aria-hidden="true"><path d="M4 3h24c2.2 0 3.4 2.5 2 4.3L20 20v18c0 2.2-1.8 4-4 4h-2c-2.2 0-4-1.8-4-4V20L1.9 7.3C.5 5.5 1.8 3 4 3z" fill="currentColor"/><rect x="34" y="1" width="14" height="6" rx="3" fill="currentColor"/><rect x="34" y="12" width="18" height="6" rx="3" fill="currentColor"/><rect x="34" y="23" width="22" height="6" rx="3" fill="currentColor"/><rect x="34" y="34" width="26" height="6" rx="3" fill="currentColor"/></svg></label>
+      <select id="fDistrict" class="fsel"><option>All Districts</option><option>Mzuzu</option><option>Mzimba</option><option>Rumphi</option><option>Lilongwe</option><option>Nkhata Bay</option><option>Kasungu</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="fGender">Gender<svg class="filter-icon" viewBox="0 0 64 48" aria-hidden="true"><path d="M4 3h24c2.2 0 3.4 2.5 2 4.3L20 20v18c0 2.2-1.8 4-4 4h-2c-2.2 0-4-1.8-4-4V20L1.9 7.3C.5 5.5 1.8 3 4 3z" fill="currentColor"/><rect x="34" y="1" width="14" height="6" rx="3" fill="currentColor"/><rect x="34" y="12" width="18" height="6" rx="3" fill="currentColor"/><rect x="34" y="23" width="22" height="6" rx="3" fill="currentColor"/><rect x="34" y="34" width="26" height="6" rx="3" fill="currentColor"/></svg></label>
+      <select id="fGender" class="fsel"><option>All Genders</option><option>Female</option><option>Male</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="fComponent">Component<svg class="filter-icon" viewBox="0 0 64 48" aria-hidden="true"><path d="M4 3h24c2.2 0 3.4 2.5 2 4.3L20 20v18c0 2.2-1.8 4-4 4h-2c-2.2 0-4-1.8-4-4V20L1.9 7.3C.5 5.5 1.8 3 4 3z" fill="currentColor"/><rect x="34" y="1" width="14" height="6" rx="3" fill="currentColor"/><rect x="34" y="12" width="18" height="6" rx="3" fill="currentColor"/><rect x="34" y="23" width="22" height="6" rx="3" fill="currentColor"/><rect x="34" y="34" width="26" height="6" rx="3" fill="currentColor"/></svg></label>
+      <select id="fComponent" class="fsel"><option>All Components</option><option>Skills Development</option><option>Career Enrichment</option><option>Leadership Dev</option><option>Digital Platform</option><option>Hackathons</option></select>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <a href="index.html" class="nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></span> Back to Home</a>
+  <div class="sidebar-section-label">Overview</div>
+  <a href="#hero" class="nav-item active"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span> Dashboard</a>
+
+  <div class="sidebar-section-label">Outputs</div>
+  <a href="#trainees" class="nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14.5c2.4 0 4.5 1.6 4.5 4.5"/></svg></span> Youth Reached & Trained</a>
+  <a href="#skills" class="nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 00-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0012 2z"/></svg></span> Skills & Leadership</a>
+  <a href="#inclusion" class="nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0112 7.5 4.3 4.3 0 0119.5 10c0 5.4-7.5 10-7.5 10z"/></svg></span> Inclusion & Equity</a>
+  <a href="#enterprise" class="nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/><path d="M3 13h18"/></svg></span> Enterprise & Hubs</a>
+  <a href="#engagement" class="nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3A4 4 0 0011 18.7l1-1"/></svg></span> Engagement</a>
+
+  <div class="sidebar-section-label">Outcomes</div>
+  <a href="#outcomes" class="nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></span> Youth Outcomes</a>
+  <a href="#digital" class="nav-item"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg></span> Digital Adoption</a>
+
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- HERO KPI ROW -->
+  <section id="hero">
+    <div class="hero-nav-buttons" id="outputLensRow">
+      <button type="button" class="hero-nav-btn active" data-target="skills">Youth Training and Leadership</button>
+      <button type="button" class="hero-nav-btn" data-target="enterprise">Inclusion, Enterprise and Community</button>
+    </div>
+  </section>
+
+  <!-- OUTPUT GRID: Detailed KPI tables -->
+  <section id="trainees">
+    <div class="section-hdr reveal">
+      <h2>Outputs</h2>
+    </div>
+    <div class="output-grid reveal single-block" id="outputGrid">
+
+      <!-- Block 1: Youth Training Outputs -->
+      <div class="output-block" id="skills">
+        <div class="block-header"><h3>Youth Training & Leadership</h3></div>
+        <div class="kpi-card-grid grid-4">
+          <div class="kpi-card idx-card c-teal">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></span>
+            <div class="kpi-card-val">12,834</div>
+            <div class="kpi-card-label">Total Youth Reached</div>
+          </div>
+          <div class="kpi-card idx-card c-teal-mid">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6c2-1 5-1.3 7 0v13c-2-1.3-5-1-7 0z"/><path d="M21 6c-2-1-5-1.3-7 0v13c2-1.3 5-1 7 0z"/></svg></span>
+            <div class="kpi-card-val">11,320</div>
+            <div class="kpi-card-label">Total Youths Trained</div>
+          </div>
+          <div class="kpi-card idx-card c-teal-light">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="3"/><path d="M6 21c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M7 7l5-2.5L17 7"/></svg></span>
+            <div class="kpi-card-val">8,214</div>
+            <div class="kpi-card-label">Young Women Trained</div>
+          </div>
+          <div class="kpi-card idx-card c-navy-mid">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 6-6 2 2-6z"/></svg></span>
+            <div class="kpi-card-val">4,850</div>
+            <div class="kpi-card-label">Trained on Leadership</div>
+          </div>
+          <div class="kpi-card idx-card c-navy">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M2 19h20"/></svg></span>
+            <div class="kpi-card-val">7,032</div>
+            <div class="kpi-card-label">Trained on Digital Skills</div>
+          </div>
+          <div class="kpi-card idx-card c-gold">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 16.9 6.4 20.1l1.4-6.3-4.8-4.3 6.4-.6z"/></svg></span>
+            <div class="kpi-card-val">2,050</div>
+            <div class="kpi-card-label">Youth Leaders/Ambassadors Trained</div>
+          </div>
+          <div class="kpi-card idx-card c-gold">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c3 2 5 6 4 12l-4 4-4-4c-1-6 1-10 4-12z"/><circle cx="12" cy="10" r="1.6"/><path d="M8 17l-2 4M16 17l2 4"/></svg></span>
+            <div class="kpi-card-val">40</div>
+            <div class="kpi-card-label">Youth Leaders Deployed</div>
+          </div>
+          <div class="kpi-card idx-card c-green">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 8l3 3-3 3"/><path d="M19 11h-6"/></svg></span>
+            <div class="kpi-card-val">1,080</div>
+            <div class="kpi-card-label">Youth Leaders Mentored &amp; Coached</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Block 2: Inclusion, Enterprise, Hubs -->
+      <div class="output-block hidden-block" id="enterprise">
+        <div class="block-header"><h3>Inclusion, Enterprise &amp; Community</h3></div>
+        <div class="kpi-card-grid grid-4">
+          <div class="kpi-card idx-card c-teal">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.5"/><path d="M12 8.5l-4.5 9h9z"/><path d="M10.5 17.5v3.5M13.5 17.5v3.5"/></svg></span>
+            <div class="kpi-card-val">9,042</div>
+            <div class="kpi-card-label">Total Female Reached</div>
+          </div>
+          <div class="kpi-card idx-card c-green">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9"/><path d="M4 9a2.7 2.7 0 005.3 0 2.7 2.7 0 005.4 0A2.7 2.7 0 0020 9"/><path d="M5 12v8h14v-8"/><path d="M10 20v-4h4v4"/></svg></span>
+            <div class="kpi-card-val">1,342</div>
+            <div class="kpi-card-label">Enterprises Created</div>
+          </div>
+          <div class="kpi-card idx-card c-purple">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4" r="1.6"/><path d="M11 6v4l-3 8M12 10l4 8M8 9h7"/></svg></span>
+            <div class="kpi-card-val">312</div>
+            <div class="kpi-card-label">PWD Reached (YPs &amp; YLs)</div>
+          </div>
+          <div class="kpi-card idx-card c-gold">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l9 16H3z"/><path d="M12 4v16"/></svg></span>
+            <div class="kpi-card-val">88</div>
+            <div class="kpi-card-label">Internally Displaced (YPs &amp; YLs)</div>
+          </div>
+          <div class="kpi-card idx-card c-coral">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg></span>
+            <div class="kpi-card-val">34</div>
+            <div class="kpi-card-label">Refugees (YPs &amp; YLs)</div>
+          </div>
+          <div class="kpi-card idx-card c-teal-mid">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l6-5 6 5v9H3z"/><path d="M13 11l6-5 2 2v11h-8"/></svg></span>
+            <div class="kpi-card-val">6,340</div>
+            <div class="kpi-card-label">Community Members at Hubs</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /output-grid -->
+  </section>
+
+  <!-- VISUAL ROW 1: Bar + Inclusion Donut -->
+  <div class="vis-row reveal">
+
+    <!-- Participants by District: Horizontal Bar -->
+    <div class="vis-card chart-card-style">
+      <div class="vis-title">Youth Trained by District</div>
+      <div class="bar-chart">
+        <div class="bc-row">
+          <span class="bc-label">Mzimba</span>
+          <div class="bc-track"><div class="bc-fill" style="width:88%;background:var(--teal)"><span>3,124</span></div></div>
+        </div>
+        <div class="bc-row">
+          <span class="bc-label">Mzuzu</span>
+          <div class="bc-track"><div class="bc-fill" style="width:76%;background:var(--teal)"><span>2,698</span></div></div>
+        </div>
+        <div class="bc-row">
+          <span class="bc-label">Rumphi</span>
+          <div class="bc-track"><div class="bc-fill" style="width:68%;background:var(--navy-mid)"><span>2,410</span></div></div>
+        </div>
+        <div class="bc-row">
+          <span class="bc-label">Lilongwe</span>
+          <div class="bc-track"><div class="bc-fill" style="width:55%;background:var(--navy-mid)"><span>1,950</span></div></div>
+        </div>
+        <div class="bc-row">
+          <span class="bc-label">Nkhata Bay</span>
+          <div class="bc-track"><div class="bc-fill" style="width:46%;background:var(--gold)"><span>1,632</span></div></div>
+        </div>
+        <div class="bc-row">
+          <span class="bc-label">Kasungu</span>
+          <div class="bc-track"><div class="bc-fill" style="width:40%;background:var(--gold)"><span>1,418</span></div></div>
+        </div>
+        <div class="bc-row">
+          <span class="bc-label">Karonga</span>
+          <div class="bc-track"><div class="bc-fill" style="width:32%;background:var(--green)"><span>1,135</span></div></div>
+        </div>
+        <div class="bc-row">
+          <span class="bc-label">Other</span>
+          <div class="bc-track"><div class="bc-fill" style="width:22%;background:var(--teal-light)"><span>780</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inclusion equity donut -->
+    <div class="vis-card chart-card-style" id="inclusion">
+      <div class="vis-title">Inclusion & Equity Reach</div>
+      <div class="donut-wrap" style="flex-direction:column;align-items:center;gap:10px">
+        <svg viewBox="0 0 520 240" style="width:100%;max-width:420px;height:auto;display:block;margin:0 auto" role="img" aria-label="Donut chart showing Inclusion and Equity Reach: PWD 312 (71.89%), IDP 88 (20.28%), Refugees 34 (7.83%)">
+          <path d="M 260 120 L 260 32 A 88 88 0 1 1 173.68 137.10 Z" fill="var(--purple)" stroke="var(--surface)" stroke-width="2"/>
+          <path d="M 260 120 L 173.68 137.10 A 88 88 0 0 1 218.41 42.43 Z" fill="var(--gold)" stroke="var(--surface)" stroke-width="2"/>
+          <path d="M 260 120 L 218.41 42.43 A 88 88 0 0 1 260 32 Z" fill="var(--coral)" stroke="var(--surface)" stroke-width="2"/>
+          <circle cx="260" cy="120" r="52.8" fill="var(--surface)"/>
+          <text x="260" y="125" text-anchor="middle" font-family="Verdana,Geneva,sans-serif" font-size="18" font-weight="700" fill="var(--text-1)">434</text>
+
+          <polyline points="329.57,177.10 341.94,187.25 357.94,187.25" fill="none" stroke="var(--text-3)" stroke-width="1"/>
+          <circle cx="329.57" cy="177.10" r="2" fill="var(--text-3)"/>
+          <text x="362.94" y="191.25" text-anchor="start" font-family="Verdana,Geneva,sans-serif" font-size="12" fill="var(--text-2)">312 (71.89%)</text>
+
+          <polyline points="178.66,81.52 164.20,74.68 148.20,74.68" fill="none" stroke="var(--text-3)" stroke-width="1"/>
+          <circle cx="178.66" cy="81.52" r="2" fill="var(--text-3)"/>
+          <text x="143.20" y="78.68" text-anchor="end" font-family="Verdana,Geneva,sans-serif" font-size="12" fill="var(--text-2)">88 (20.28%)</text>
+
+          <polyline points="238.13,32.70 234.24,17.18 218.24,17.18" fill="none" stroke="var(--text-3)" stroke-width="1"/>
+          <circle cx="238.13" cy="32.70" r="2" fill="var(--text-3)"/>
+          <text x="213.24" y="21.18" text-anchor="end" font-family="Verdana,Geneva,sans-serif" font-size="12" fill="var(--text-2)">34 (7.83%)</text>
+        </svg>
+        <div class="donut-legend" style="flex-direction:row;justify-content:center;align-items:center;gap:18px;width:100%">
+          <div class="dl-row" style="flex:none"><span class="dl-dot" style="background:var(--purple)"></span><span class="dl-label" style="flex:none">PWD</span></div>
+          <div class="dl-row" style="flex:none"><span class="dl-dot" style="background:var(--gold)"></span><span class="dl-label" style="flex:none">IDP</span></div>
+          <div class="dl-row" style="flex:none"><span class="dl-dot" style="background:var(--coral)"></span><span class="dl-label" style="flex:none">Refugees</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /vis-row -->
+
+  <!-- VIS ROW 2: Stacked year chart + Hub grid -->
+  <div class="vis-row-2 reveal">
+
+    <!-- Stacked bar: skills type by year -->
+    <div class="vis-card chart-card-style">
+      <div class="vis-title">Training Type by Year</div>
+      <div class="stacked-chart">
+        <div class="sc-row">
+          <span class="sc-label">2021</span>
+          <div class="sc-bars">
+            <div class="sc-seg" style="width:30%;background:var(--teal)"><span>840</span></div>
+            <div class="sc-seg" style="width:45%;background:var(--navy-mid)"><span>1,260</span></div>
+            <div class="sc-seg" style="width:25%;background:var(--gold)"><span>700</span></div>
+          </div>
+          <span class="sc-total">2,800</span>
+        </div>
+        <div class="sc-row">
+          <span class="sc-label">2022</span>
+          <div class="sc-bars">
+            <div class="sc-seg" style="width:35%;background:var(--teal)"><span>980</span></div>
+            <div class="sc-seg" style="width:40%;background:var(--navy-mid)"><span>1,120</span></div>
+            <div class="sc-seg" style="width:25%;background:var(--gold)"><span>700</span></div>
+          </div>
+          <span class="sc-total">2,800</span>
+        </div>
+        <div class="sc-row">
+          <span class="sc-label">2023</span>
+          <div class="sc-bars">
+            <div class="sc-seg" style="width:28%;background:var(--teal)"><span>756</span></div>
+            <div class="sc-seg" style="width:50%;background:var(--navy-mid)"><span>1,350</span></div>
+            <div class="sc-seg" style="width:22%;background:var(--gold)"><span>594</span></div>
+          </div>
+          <span class="sc-total">2,700</span>
+        </div>
+        <div class="sc-row">
+          <span class="sc-label">2024</span>
+          <div class="sc-bars">
+            <div class="sc-seg" style="width:32%;background:var(--teal)"><span>960</span></div>
+            <div class="sc-seg" style="width:42%;background:var(--navy-mid)"><span>1,260</span></div>
+            <div class="sc-seg" style="width:26%;background:var(--gold)"><span>780</span></div>
+          </div>
+          <span class="sc-total">3,000</span>
+        </div>
+        <div class="sc-row">
+          <span class="sc-label">2025</span>
+          <div class="sc-bars">
+            <div class="sc-seg" style="width:38%;background:var(--teal)"><span>1,178</span></div>
+            <div class="sc-seg" style="width:38%;background:var(--navy-mid)"><span>1,178</span></div>
+            <div class="sc-seg" style="width:24%;background:var(--gold)"><span>744</span></div>
+          </div>
+          <span class="sc-total">3,100</span>
+        </div>
+      </div>
+      <div class="legend-strip" style="justify-content:center;margin-top:auto;padding-top:8px">
+        <div class="ls-item"><span class="ls-dot" style="background:var(--teal)"></span>Digital Skills</div>
+        <div class="ls-item"><span class="ls-dot" style="background:var(--navy-mid)"></span>Leadership</div>
+        <div class="ls-item"><span class="ls-dot" style="background:var(--gold)"></span>Career Enrichment</div>
+      </div>
+    </div>
+
+    <!-- Community Hubs -->
+    <div class="vis-card chart-card-style">
+      <div class="vis-title">Community Hubs</div>
+      <div class="donut-wrap" style="flex-direction:column;align-items:center;justify-content:center;gap:0;flex:1">
+        <svg viewBox="0 0 520 240" style="width:100%;max-width:420px;height:auto;display:block;margin:0 auto" role="img" aria-label="Donut chart showing 11 total community hubs: 9 active, 2 inactive">
+          <path d="M 260 120 L 260 32 A 88 88 0 1 1 179.97 83.41 Z" fill="var(--green)" stroke="var(--surface)" stroke-width="2"/>
+          <path d="M 260 120 L 179.97 83.41 A 88 88 0 0 1 260 32 Z" fill="var(--coral)" stroke="var(--surface)" stroke-width="2"/>
+          <circle cx="260" cy="120" r="52.8" fill="var(--surface)"/>
+          <text x="260" y="125" text-anchor="middle" font-family="Verdana,Geneva,sans-serif" font-size="18" font-weight="700" fill="var(--text-1)">11</text>
+
+          <polyline points="308.75,195.65 317.42,209.10 333.42,209.10" fill="none" stroke="var(--text-3)" stroke-width="1"/>
+          <circle cx="308.75" cy="195.65" r="2" fill="var(--text-3)"/>
+          <text x="338.42" y="213.10" text-anchor="start" font-family="Verdana,Geneva,sans-serif" font-size="12" fill="var(--text-2)">9 (82%)</text>
+
+          <polyline points="211.25,44.35 202.58,30.90 186.58,30.90" fill="none" stroke="var(--text-3)" stroke-width="1"/>
+          <circle cx="211.25" cy="44.35" r="2" fill="var(--text-3)"/>
+          <text x="181.58" y="34.90" text-anchor="end" font-family="Verdana,Geneva,sans-serif" font-size="12" fill="var(--text-2)">2 (18%)</text>
+        </svg>
+      </div>
+      <div class="donut-legend" style="flex-direction:row;justify-content:center;align-items:center;gap:18px;width:100%;margin-top:auto;padding-top:8px">
+        <div class="dl-row" style="flex:none"><span class="dl-dot" style="background:var(--green)"></span><span class="dl-label" style="flex:none">Active</span><span class="dl-val">9</span></div>
+        <div class="dl-row" style="flex:none"><span class="dl-dot" style="background:var(--coral)"></span><span class="dl-label" style="flex:none">Inactive</span><span class="dl-val">2</span></div>
+      </div>
+    </div>
+
+  </div><!-- /vis-row-2 -->
+
+  <!-- OUTCOMES SECTION -->
+  <section id="outcomes">
+    <div class="section-hdr reveal">
+      <h2>Outcomes</h2>
+    </div>
+
+    <div class="outcome-section reveal">
+      <div class="outcome-header">
+        <div><h2>Youth Outcome Indicators</h2></div>
+      </div>
+      <div class="outcome-grid" id="digital">
+
+        <!-- Outcome 1: Employment -->
+        <div class="outcome-card">
+          <div class="radial-wrap">
+            <svg width="80" height="80" viewBox="0 0 80 80" role="img" aria-label="68% youth on dignified jobs">
+              <circle class="radial-bg" cx="40" cy="40" r="32"/>
+              <circle class="radial-val" cx="40" cy="40" r="32" stroke="var(--green)"
+                stroke-dasharray="136.5 66.5" stroke-dashoffset="0"/>
+            </svg>
+            <div class="radial-label">
+              <span class="radial-pct">68%</span>
+              <span class="radial-sub">of YLs</span>
+            </div>
+          </div>
+          <div class="outcome-name">Youth Leaders in Dignified Employment</div>
+          <div style="margin-top:8px">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-bottom:4px"><span>Full-time</span><span style="font-weight:600;color:var(--text-2)">38%</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-bottom:4px"><span>Part-time</span><span style="font-weight:600;color:var(--text-2)">18%</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3)"><span>Seasonal</span><span style="font-weight:600;color:var(--text-2)">12%</span></div>
+          </div>
+        </div>
+
+        <!-- Outcome 2: Increased Revenue -->
+        <div class="outcome-card">
+          <div class="radial-wrap">
+            <svg width="80" height="80" viewBox="0 0 80 80" role="img" aria-label="72% increased revenue">
+              <circle class="radial-bg" cx="40" cy="40" r="32"/>
+              <circle class="radial-val" cx="40" cy="40" r="32" stroke="var(--teal)"
+                stroke-dasharray="144.7 58.3" stroke-dashoffset="0"/>
+            </svg>
+            <div class="radial-label">
+              <span class="radial-pct">72%</span>
+              <span class="radial-sub">of YLs</span>
+            </div>
+          </div>
+          <div class="outcome-name">Youth Leaders with Increased Revenue</div>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:3px">
+            <div style="height:5px;background:#E8EFF0;border-radius:3px;overflow:hidden"><div style="width:72%;height:100%;background:var(--teal);border-radius:3px"></div></div>
+            <div style="font-size:10px;color:var(--text-3)">Target: 80% by end 2026</div>
+            <div style="height:5px;background:#E8EFF0;border-radius:3px;overflow:hidden;margin-top:4px"><div style="width:80%;height:100%;background:#E8EFF0;border-radius:3px;position:relative;overflow:hidden"><div style="width:90%;height:100%;background:var(--teal-light);border-radius:3px"></div></div></div>
+          </div>
+        </div>
+
+        <!-- Outcome 3: Entrepreneurship -->
+        <div class="outcome-card">
+          <div class="radial-wrap">
+            <svg width="80" height="80" viewBox="0 0 80 80" role="img" aria-label="58% ventured into entrepreneurship">
+              <circle class="radial-bg" cx="40" cy="40" r="32"/>
+              <circle class="radial-val" cx="40" cy="40" r="32" stroke="var(--gold)"
+                stroke-dasharray="116.6 86.4" stroke-dashoffset="0"/>
+            </svg>
+            <div class="radial-label">
+              <span class="radial-pct">58%</span>
+              <span class="radial-sub">of YPs</span>
+            </div>
+          </div>
+          <div class="outcome-name">Youth Venturing into Entrepreneurship</div>
+          <div style="margin-top:8px">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-bottom:4px"><span>Formal business</span><span style="font-weight:600;color:var(--text-2)">32%</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3)"><span>Informal/side hustle</span><span style="font-weight:600;color:var(--text-2)">26%</span></div>
+          </div>
+        </div>
+
+        <!-- Outcome 4: Linkages / Scholarships -->
+        <div class="outcome-card">
+          <div class="radial-wrap">
+            <svg width="80" height="80" viewBox="0 0 80 80" role="img" aria-label="44% linked to new opportunities">
+              <circle class="radial-bg" cx="40" cy="40" r="32"/>
+              <circle class="radial-val" cx="40" cy="40" r="32" stroke="var(--purple)"
+                stroke-dasharray="88.5 114.5" stroke-dashoffset="0"/>
+            </svg>
+            <div class="radial-label">
+              <span class="radial-pct">44%</span>
+              <span class="radial-sub">of YLs</span>
+            </div>
+          </div>
+          <div class="outcome-name">Linked to New Opportunities incl. Scholarships</div>
+          <div style="margin-top:8px">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-bottom:4px"><span>Scholarships</span><span style="font-weight:600;color:var(--text-2)">18%</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-bottom:4px"><span>Internships</span><span style="font-weight:600;color:var(--text-2)">14%</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3)"><span>Networks/Forums</span><span style="font-weight:600;color:var(--text-2)">12%</span></div>
+          </div>
+        </div>
+
+        <!-- Outcome 5: Digital Tools -->
+        <div class="outcome-card">
+          <div class="radial-wrap">
+            <svg width="80" height="80" viewBox="0 0 80 80" role="img" aria-label="81% adopted digital tools">
+              <circle class="radial-bg" cx="40" cy="40" r="32"/>
+              <circle class="radial-val" cx="40" cy="40" r="32" stroke="var(--teal-mid)"
+                stroke-dasharray="162.8 40.2" stroke-dashoffset="0"/>
+            </svg>
+            <div class="radial-label">
+              <span class="radial-pct">81%</span>
+              <span class="radial-sub">adopted</span>
+            </div>
+          </div>
+          <div class="outcome-name">Youth Adopted Digital Tools</div>
+          <div style="margin-top:8px">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-bottom:3px"><span>Facebook / Meta</span><span style="font-weight:600;color:var(--text-2)">76%</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);margin-bottom:3px"><span>Google Sheets</span><span style="font-weight:600;color:var(--text-2)">62%</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3)"><span>Canva</span><span style="font-weight:600;color:var(--text-2)">54%</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- DIGITAL TOOL ADOPTION DETAIL -->
+  <div class="vis-row-2 reveal" style="grid-template-columns: 1fr">
+    <div class="vis-card">
+      <div class="vis-title">Digital Tool Adoption Rate by Year</div>
+      <div class="bar-chart">
+        <div class="bc-row">
+          <span class="bc-label" style="width:90px">Facebook / Meta</span>
+          <div class="bc-track"><div class="bc-fill" style="width:76%;background:#1877F2"></div></div>
+          <span class="bc-total">76%</span>
+        </div>
+        <div class="bc-row">
+          <span class="bc-label" style="width:90px">Google Sheets</span>
+          <div class="bc-track"><div class="bc-fill" style="width:62%;background:var(--green)"></div></div>
+          <span class="bc-total">62%</span>
+        </div>
+        <div class="bc-row">
+          <span class="bc-label" style="width:90px">Canva</span>
+          <div class="bc-track"><div class="bc-fill" style="width:54%;background:var(--teal)"></div></div>
+          <span class="bc-total">54%</span>
+        </div>
+        <div class="bc-row">
+          <span class="bc-label" style="width:90px">WhatsApp Biz</span>
+          <div class="bc-track"><div class="bc-fill" style="width:48%;background:#25D366"></div></div>
+          <span class="bc-total">48%</span>
+        </div>
+        <div class="bc-row">
+          <span class="bc-label" style="width:90px">Google Forms</span>
+          <div class="bc-track"><div class="bc-fill" style="width:38%;background:var(--purple)"></div></div>
+          <span class="bc-total">38%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+</main>
+</div>
+
+<script>
+// Counter animation for hero stat
+function animateCounter(el, target, duration) {
+  let start = 0;
+  const step = target / (duration / 16);
+  const timer = setInterval(() => {
+    start += step;
+    if (start >= target) { start = target; clearInterval(timer); }
+    el.textContent = Math.floor(start).toLocaleString();
+  }, 16);
+}
+window.addEventListener('load', () => {
+  const el = document.getElementById('counter-reach');
+  if (el) animateCounter(el, 12834, 1400);
+});
+
+// Scroll-reveal
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 60);
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.08 });
+reveals.forEach(r => observer.observe(r));
+
+// Sidebar nav active state
+const navItems = document.querySelectorAll('.nav-item');
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    navItems.forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+  });
+});
+
+// Filter selects — visual feedback only (no real data filtering for prototype)
+document.querySelectorAll('.fsel').forEach(sel => {
+  sel.addEventListener('change', () => {
+    sel.style.borderColor = 'var(--teal-light)';
+    setTimeout(() => sel.style.borderColor = '', 1200);
+  });
+});
+
+/* ---------------------------------------------------------------
+   Output KPI lens: toggle between "Youth Training and Leadership"
+   and "Inclusion, Enterprise and Community" — same show/hide
+   pattern as the lens buttons on the main index dashboard.
+------------------------------------------------------------------*/
+let currentOutputLens = 'skills';
+
+function applyOutputLens(){
+  document.querySelectorAll('.output-block').forEach(block => {
+    if (block.id === currentOutputLens) {
+      block.classList.remove('hidden-block');
+    } else {
+      block.classList.add('hidden-block');
+    }
+  });
+  const grid = document.getElementById('outputGrid');
+  const visibleCount = document.querySelectorAll('.output-block:not(.hidden-block)').length;
+  grid.classList.toggle('single-block', visibleCount === 1);
+}
+
+document.getElementById('outputLensRow').addEventListener('click', e => {
+  const btn = e.target.closest('.hero-nav-btn');
+  if (!btn) return;
+  document.querySelectorAll('#outputLensRow .hero-nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentOutputLens = btn.dataset.target;
+  applyOutputLens();
+});
+
+applyOutputLens();
+</script>
+</body>
+</html>
